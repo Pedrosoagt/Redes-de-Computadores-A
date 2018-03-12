@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-//#include <stdio_ext.h>
 
 #define NAME_SIZE 20
 #define MSG_SIZE 80
@@ -41,8 +40,7 @@ char **argv;
 	 * O primeiro argumento (argv[1]) � o hostname do servidor.
 	 * O segundo argumento (argv[2]) � a porta do servidor.
 	 */
-	if (argc != 3)
-	{
+	if (argc != 3) {
 		fprintf(stderr, "Use: %s hostname porta\n", argv[0]);
 		exit(1);
 	}
@@ -51,8 +49,7 @@ char **argv;
 	 * Obtendo o endere�o IP do servidor
 	 */
 	hostnm = gethostbyname(argv[1]);
-	if (hostnm == (struct hostent *) 0)
-	{
+	if (hostnm == (struct hostent *) 0) {
 		fprintf(stderr, "Gethostbyname failed\n");
 		exit(2);
 	}
@@ -68,20 +65,18 @@ char **argv;
 	/*
 	 * Cria um socket TCP (stream)
 	 */
-	if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-	{
+	if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
 		perror("Socket()");
 		exit(3);
 	}
 
 	/* Estabelece conex�o com o servidor */
-	if (connect(s, (struct sockaddr *)&server, sizeof(server)) < 0)
-	{
+	if (connect(s, (struct sockaddr *)&server, sizeof(server)) < 0) {
 		perror("Connect()");
 		exit(4);
 	}
 
-	while(1){
+	while(1) {
 		/*Menu Inicial*/
 		printf("Opcoes:\n1- Cadastrar mensagem\n2- Ler mensagens\n3- Apagar mensagens\n4- Sair\n");
 
@@ -92,55 +87,49 @@ char **argv;
 		strcpy(envio.name, "empty");
 		strcpy(envio.message, "empty");
 
-		switch(type_clt){
-
-				case 1:
-					
-					strcpy(msg, "");
-					
-					// Nome
-					puts("Usuario (máximo 19 caracteres):");
-					__fpurge(stdin);
-					fgets(envio.name, NAME_SIZE, stdin);
-					strtok(envio.name, "\n");
-					// Mensagem
-					puts("Mensagem (máximo 79 caracteres):");
-					__fpurge(stdin);
-					fgets(envio.message, MSG_SIZE, stdin);
-					envio.type = 1;
-					break;
-
-				case 2:
-					strcpy(msg, "Mensagens cadastradas:");
-					envio.type = 2;
-					break;
-
-				case 3:
-					strcpy(msg, "Mensagens removidas:");
-					
-					puts("Usuario (máximo 19 caracteres):");
-					__fpurge(stdin);
-					fgets(envio.name, NAME_SIZE, stdin);
-					strtok(envio.name, "\n");
-					envio.type = 3;
-					break;
-
-				case 4:
-					envio.type = 0;
-					break;
-
-				default:
-					puts("Coloque um valor válido!");
-					__fpurge(stdin);
-					break;
+		switch(type_clt) {
+			case 1:
+				strcpy(msg, "");
+				
+				// Nome
+				puts("Usuario (máximo 19 caracteres):");
+				fpurge(stdin);
+				fgets(envio.name, NAME_SIZE, stdin);
+				strtok(envio.name, "\n");
+				// Mensagem
+				puts("Mensagem (máximo 79 caracteres):");
+				fpurge(stdin);
+				fgets(envio.message, MSG_SIZE, stdin);
+				envio.type = 1;
+			break;
+			case 2:
+				strcpy(msg, "Mensagens cadastradas:");
+				envio.type = 2;
+			break;
+			case 3:
+				strcpy(msg, "Mensagens removidas:");
+				
+				puts("Usuario (máximo 19 caracteres):");
+				fpurge(stdin);
+				fgets(envio.name, NAME_SIZE, stdin);
+				strtok(envio.name, "\n");
+				envio.type = 3;
+			break;
+			case 4:
+				envio.type = 0;
+			break;
+			default:
+				puts("Coloque um valor válido!");
+				fpurge(stdin);
+			break;
 		}
 
-			// Finalizacao do programa
-			if(!envio.type){
-				close(s);
-				puts("Ate logo!");
-				exit(0);
-			}
+		// Finalizacao do programa
+		if(!envio.type){
+			close(s);
+			puts("Ate logo!");
+			exit(0);
+		}
 			
 		/* Envia a mensagem no buffer de envio para o servidor */
 		if (send(s, &envio, sizeof(envio), 0) < 0) {
@@ -171,5 +160,4 @@ char **argv;
 
 	printf("Cliente terminou com sucesso.\n");
 	exit(0);
-
 }

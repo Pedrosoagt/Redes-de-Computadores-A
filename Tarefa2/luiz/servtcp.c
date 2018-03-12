@@ -6,8 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-/* Constantes do programa
-*/
+/* Constantes do programa */
 #define NAME_SIZE 20
 #define MSG_SIZE 80
 #define LIST_SIZE 10
@@ -43,7 +42,6 @@ int insertMsg(Msg list[], Msg *envio){
 
 	strcpy(envio->answer, "A mensagem nao foi incluida. A lista ja esta cheia!");
 	return 0;
-
 }
 
 int removeMsg(Msg list[], int pList, Msg *envio){
@@ -66,7 +64,6 @@ int removeMsg(Msg list[], int pList, Msg *envio){
 			rmvdMsgs++;
 		}
 	}
-	
 	
 	strcpy(envio->answer, res);
 	if(rmvdMsgs == 0)
@@ -95,7 +92,6 @@ int getMsgs(Msg list[], int pList, Msg *envio){
 	strcpy(envio->answer, res);
 }
 
-
 /*
  * Servidor TCP
  */
@@ -118,8 +114,7 @@ char **argv;
      * O primeiro argumento (argv[1]) � a porta
      * onde o servidor aguardar� por conex�es
      */
-    if (argc != 2)
-    {
+    if (argc != 2) {
         fprintf(stderr, "Use: %s porta\n", argv[0]);
         exit(1);
     }
@@ -129,8 +124,7 @@ char **argv;
     /*
      * Cria um socket TCP (stream) para aguardar conex�es
      */
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-    {
+    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Socket()");
         exit(2);
     }
@@ -147,8 +141,7 @@ char **argv;
     /*
      * Liga o servidor � porta definida anteriormente.
      */
-    if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0)
-    {
+    if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0) {
        perror("Bind()");
        exit(3);
     }
@@ -157,8 +150,7 @@ char **argv;
      * Prepara o socket para aguardar por conex�es e
      * cria uma fila de conex�es pendentes.
      */
-    if (listen(s, 1) != 0)
-    {
+    if (listen(s, 1) != 0) {
         perror("Listen()");
         exit(4);
     }
@@ -168,42 +160,35 @@ char **argv;
      * ocorrer� a comunica��o com o cliente.
      */
     namelen = sizeof(client);
-    if ((ns = accept(s, (struct sockaddr *)&client, &namelen)) == -1)
-    {
+    if ((ns = accept(s, (struct sockaddr *)&client, &namelen)) == -1) {
         perror("Accept()");
         exit(5);
     }
 
-	while(1){
+	while(1) {
 	    /* Recebe uma mensagem do cliente atrav�s do novo socket conectado */
-	    if (recv(ns, &envio, sizeof(envio), 0) == -1)
-	    {
+	    if (recv(ns, &envio, sizeof(envio), 0) == -1) {
 	        perror("Recv()");
 	        exit(6);
 	    }
 	    puts("Mensagem recebida do cliente:");
 		printf("Tipo: %i | Nome: %s | Msg: %s\n", envio.type, envio.name, envio.message);
 
-		switch(envio.type){
+		switch(envio.type) {
 			case 1:
 				if(insertMsg(list, &envio) == 1);
-					pList++;
-				
+					pList++;	
 			break;
-
 			case 2:
 				getMsgs(list, pList, &envio);
 			break;
-
 			case 3:
 				pList -= removeMsg(list, pList, &envio);
 			break;
 		}
 
-
 	    /* Envia uma mensagem ao cliente atrav�s do socket conectado */
-	    if (send(ns, &envio, sizeof(envio), 0) < 0)
-	    {
+	    if (send(ns, &envio, sizeof(envio), 0) < 0) {
 	        perror("Send()");
 	        exit(7);
 	    }
