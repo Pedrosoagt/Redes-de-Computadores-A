@@ -1,2 +1,2 @@
 # Redes-de-Computadores-A
-Este repositório para compartilhar trabalhos relacionados as atividades desenvolvidas durante o curso de redes. 
+Repositório de atividades desenvolvidas ao longo do curso de redes. 
