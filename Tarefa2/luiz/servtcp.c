@@ -11,7 +11,7 @@
 #define NAME_SIZE 20
 #define MSG_SIZE 80
 #define LIST_SIZE 10
-#define ANS_SIZE 1170
+#define ANS_SIZE 1250
 
 /*
 * Struct to save Mensagens
@@ -27,41 +27,71 @@ typedef struct Msg {
 //funções auxiliares
 
 //Procura e armazena nova msg
-void insertMsg(Msg list[], Msg *envio){
+int insertMsg(Msg list[], Msg *envio){
 
 	int i;
 
 	// procurando espaco vazio e atribuindo nova msg
-	for( i = 0; i < LIST_SIZE; i++){
-		if(strlen(list[i].name) == 0 ) {
+	for(i = 0; i < LIST_SIZE; i++){
+		if(strcmp(list[i].name, "") == 0){
 			list[i] = *envio;
 			strcpy(envio->answer, "Mensagem incluida com sucesso!");
-			printf("Cadastrado\n");
-			i = LIST_SIZE;
+			envio->type = 0;
+			return 1;
 		}
 	}
+
+	strcpy(envio->answer, "A mensagem nao foi incluida. A lista ja esta cheia!");
+	return 0;
+
 }
 
-int removeMsg(){}
-
-int getMsgs(Msg list[], Msg *envio){
-
-	char res[1000] = {" "};
-	int i;
-
+int removeMsg(Msg list[], int pList, Msg *envio){
+	
+	int i, rmvdMsgs = 0;
+	char res[1200] = "";
+	
 	for(i = 0; i < LIST_SIZE; i++){
-		if(strlen(list[i].name) > 0){
+		if(strcmp(list[i].name, envio->name) == 0){
+			
+			// salvando valores
 			strcat(res, "Usuario:");
 			strcat(res, list[i].name);
-			strcat(res, "\n");
+			strcat(res, " | ");
 			strcat(res, "Mensagem:");
 			strcat(res, list[i].message);
-			strcat(res, "\n");
+			
+			//removendo
+			strcpy(list[i].name, "\0");
+			rmvdMsgs++;
 		}
-		else break;
-
 	}
+	
+	
+	strcpy(envio->answer, res);
+	if(rmvdMsgs == 0)
+		strcat(envio->answer, "Nao existem mensagens desse usuario.");
+	envio->type = rmvdMsgs;
+	return rmvdMsgs;
+}
 
+int getMsgs(Msg list[], int pList, Msg *envio){
+
+	char res[ANS_SIZE] = {""};
+	int i, count = 0;
+
+	for(i = 0; i < LIST_SIZE; i++){
+		if(strcmp(list[i].name, "\0") != 0){
+			strcat(res, "Usuario: ");
+			strcat(res, list[i].name);
+			strcat(res, "  |  ");
+			strcat(res, "Mensagem: ");
+			strcat(res, list[i].message);
+			count++;
+		}
+	}
+	
+	envio->type = count;
 	strcpy(envio->answer, res);
 }
 
@@ -81,7 +111,8 @@ char **argv;
     int s;			/* Socket para aceitar conex�es       */
     int ns;			/* Socket conectado ao cliente        */
     int namelen;
-    Msg list[10] = {" "};	/* list of mensagens			*/
+    Msg list[10] = {"\0"};	/* list of mensagens			*/
+    int pList = 0;
     Msg envio;
     /*
      * O primeiro argumento (argv[1]) � a porta
@@ -151,21 +182,23 @@ char **argv;
 	        exit(6);
 	    }
 	    puts("Mensagem recebida do cliente:");
-			printf("Tipo: %i | Nome: %s | Msg: %s\n", envio.type, envio.name, envio.message);
+		printf("Tipo: %i | Nome: %s | Msg: %s\n", envio.type, envio.name, envio.message);
 
-			switch(envio.type){
-				case 1:
-					insertMsg(list, &envio);
-				break;
+		switch(envio.type){
+			case 1:
+				if(insertMsg(list, &envio) == 1);
+					pList++;
+				
+			break;
 
-				case 2:
-					getMsgs(list, &envio);
-				break;
+			case 2:
+				getMsgs(list, pList, &envio);
+			break;
 
-				case 3:
-					removeMsg();
-				break;
-			}
+			case 3:
+				pList -= removeMsg(list, pList, &envio);
+			break;
+		}
 
 
 	    /* Envia uma mensagem ao cliente atrav�s do socket conectado */
@@ -180,7 +213,6 @@ char **argv;
 	    strcpy(envio.message, " ");
 	    strcpy(envio.answer, " ");
 	    envio.type = 0;
-	    printf("Tipo: %i | Nome: %s | Msg: %s\n", envio.type, envio.name, envio.message);
 	}
 
     /* Fecha o socket conectado ao cliente */
