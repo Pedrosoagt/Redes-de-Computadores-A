@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio_ext.h>
 
 #define NAME_SIZE 20
 #define MSG_SIZE 80
@@ -90,15 +91,15 @@ char **argv;
 		switch(type_clt) {
 			case 1:
 				strcpy(msg, "");
-				
+
 				// Nome
 				puts("Usuario (máximo 19 caracteres):");
-				fpurge(stdin);
+				__fpurge(stdin);
 				fgets(envio.name, NAME_SIZE, stdin);
 				strtok(envio.name, "\n");
 				// Mensagem
 				puts("Mensagem (máximo 79 caracteres):");
-				fpurge(stdin);
+				__fpurge(stdin);
 				fgets(envio.message, MSG_SIZE, stdin);
 				envio.type = 1;
 			break;
@@ -108,9 +109,9 @@ char **argv;
 			break;
 			case 3:
 				strcpy(msg, "Mensagens removidas:");
-				
+
 				puts("Usuario (máximo 19 caracteres):");
-				fpurge(stdin);
+				__fpurge(stdin);
 				fgets(envio.name, NAME_SIZE, stdin);
 				strtok(envio.name, "\n");
 				envio.type = 3;
@@ -120,7 +121,7 @@ char **argv;
 			break;
 			default:
 				puts("Coloque um valor válido!");
-				fpurge(stdin);
+				__fpurge(stdin);
 			break;
 		}
 
@@ -130,7 +131,7 @@ char **argv;
 			puts("Ate logo!");
 			exit(0);
 		}
-			
+
 		/* Envia a mensagem no buffer de envio para o servidor */
 		if (send(s, &envio, sizeof(envio), 0) < 0) {
 			perror("Send()");
@@ -142,19 +143,19 @@ char **argv;
 			perror("Recv()");
 			exit(6);
 		}
-		
+
 		// print resultado:
 		if(envio.type != 0)
 			printf("%s %i\n\n", msg, envio.type);
-			
+
 		printf("%s\n", envio.answer);
-		
+
 		/*Limpando pra proxima*/
 		strcpy(envio.name, "empty");
 		strcpy(envio.message, "empty");
 		strcpy(envio.answer, "\0");
 	}
-	
+
 	/* Fecha o socket */
 	close(s);
 

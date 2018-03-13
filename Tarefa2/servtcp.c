@@ -45,26 +45,27 @@ int insertMsg(Msg list[], Msg *envio){
 }
 
 int removeMsg(Msg list[], int pList, Msg *envio){
-	
+
 	int i, rmvdMsgs = 0;
-	char res[1200] = "";
-	
+	char res[ANS_SIZE] = "";
+
+
 	for(i = 0; i < LIST_SIZE; i++){
 		if(strcmp(list[i].name, envio->name) == 0){
-			
+
 			// salvando valores
 			strcat(res, "Usuario:");
 			strcat(res, list[i].name);
 			strcat(res, " | ");
 			strcat(res, "Mensagem:");
 			strcat(res, list[i].message);
-			
+
 			//removendo
 			strcpy(list[i].name, "\0");
 			rmvdMsgs++;
 		}
 	}
-	
+
 	strcpy(envio->answer, res);
 	if(rmvdMsgs == 0)
 		strcat(envio->answer, "Nao existem mensagens desse usuario.");
@@ -74,7 +75,7 @@ int removeMsg(Msg list[], int pList, Msg *envio){
 
 int getMsgs(Msg list[], int pList, Msg *envio){
 
-	char res[ANS_SIZE] = {""};
+	char res[ANS_SIZE] = "";
 	int i, count = 0;
 
 	for(i = 0; i < LIST_SIZE; i++){
@@ -87,7 +88,7 @@ int getMsgs(Msg list[], int pList, Msg *envio){
 			count++;
 		}
 	}
-	
+
 	envio->type = count;
 	strcpy(envio->answer, res);
 }
@@ -104,12 +105,20 @@ char **argv;
     char recvbuf[12];
     struct sockaddr_in client;
     struct sockaddr_in server;
-    int s;			/* Socket para aceitar conex�es       */
-    int ns;			/* Socket conectado ao cliente        */
-    int namelen;
-    Msg list[10] = {"\0"};	/* list of mensagens			*/
-    int pList = 0;
-    Msg envio;
+    int s;					/* Socket para aceitar conexoes       */
+    int ns;					/* Socket conectado ao cliente        */
+    int namelen;		/* tamanho do nome */
+    Msg list[10];		/* lista de mensagens		*/
+    int pList = 0;	/* numero de mensagens cadastradas */
+    Msg envio;			/* struct que sera enviada */
+
+		// Inicializacao do vetor de mensagens
+		int i;
+		for(i = 0; i < LIST_SIZE; i++){
+			strcpy(list[i].name, "");
+			strcpy(list[i].message, "");
+		}
+
     /*
      * O primeiro argumento (argv[1]) � a porta
      * onde o servidor aguardar� por conex�es
@@ -177,7 +186,7 @@ char **argv;
 		switch(envio.type) {
 			case 1:
 				if(insertMsg(list, &envio) == 1);
-					pList++;	
+					pList++;
 			break;
 			case 2:
 				getMsgs(list, pList, &envio);
