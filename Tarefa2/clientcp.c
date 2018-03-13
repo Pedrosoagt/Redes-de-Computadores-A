@@ -78,52 +78,58 @@ char **argv;
 	}
 
 	while(1) {
-		/*Menu Inicial*/
-		printf("Opcoes:\n1- Cadastrar mensagem\n2- Ler mensagens\n3- Apagar mensagens\n4- Sair\n");
 
-		/*receber e tratar a sele��o*/
-		scanf("%i", &type_clt);
 
 		// inicializacao padrao de valores da struct
 		strcpy(envio.name, "empty");
 		strcpy(envio.message, "empty");
 
-		switch(type_clt) {
-			case 1:
-				strcpy(msg, "");
+		do{
 
-				// Nome
-				puts("Usuario (máximo 19 caracteres):");
-				__fpurge(stdin);
-				fgets(envio.name, NAME_SIZE, stdin);
-				strtok(envio.name, "\n");
-				// Mensagem
-				puts("Mensagem (máximo 79 caracteres):");
-				__fpurge(stdin);
-				fgets(envio.message, MSG_SIZE, stdin);
-				envio.type = 1;
-			break;
-			case 2:
-				strcpy(msg, "Mensagens cadastradas:");
-				envio.type = 2;
-			break;
-			case 3:
-				strcpy(msg, "Mensagens removidas:");
+			/*Menu Inicial*/
+			printf("Opcoes:\n1- Cadastrar mensagem\n2- Ler mensagens\n3- Apagar mensagens\n4- Sair\n");
 
-				puts("Usuario (máximo 19 caracteres):");
-				__fpurge(stdin);
-				fgets(envio.name, NAME_SIZE, stdin);
-				strtok(envio.name, "\n");
-				envio.type = 3;
-			break;
-			case 4:
-				envio.type = 0;
-			break;
-			default:
-				puts("Coloque um valor válido!");
-				__fpurge(stdin);
-			break;
-		}
+			/*receber e tratar a selecao*/
+			scanf("%i", &type_clt);
+
+			switch(type_clt) {
+				case 1:
+					strcpy(msg, "");
+
+					// Nome
+					puts("Usuario (máximo 19 caracteres):");
+					__fpurge(stdin);
+					fgets(envio.name, NAME_SIZE, stdin);
+					strtok(envio.name, "\n");
+					// Mensagem
+					puts("Mensagem (máximo 79 caracteres):");
+					__fpurge(stdin);
+					fgets(envio.message, MSG_SIZE, stdin);
+					envio.type = 1;
+				break;
+				case 2:
+					strcpy(msg, "Mensagens cadastradas:");
+					envio.type = 2;
+				break;
+				case 3:
+					strcpy(msg, "Mensagens removidas:");
+
+					puts("Usuario (máximo 19 caracteres):");
+					__fpurge(stdin);
+					fgets(envio.name, NAME_SIZE, stdin);
+					strtok(envio.name, "\n");
+					envio.type = 3;
+				break;
+				case 4:
+					envio.type = 0;
+				break;
+				default:
+					envio.type = 4;
+					puts("Coloque um valor válido!");
+					__fpurge(stdin);
+				break;
+			}
+		}while(envio.type == 4);
 
 		// Finalizacao do programa
 		if(!envio.type){
