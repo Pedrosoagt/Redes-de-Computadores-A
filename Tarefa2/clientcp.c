@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio_ext.h>
 
 #define NAME_SIZE 20
 #define MSG_SIZE 80
@@ -85,7 +86,7 @@ char **argv;
 		do{
 
 			/*Menu Inicial*/
-			printf("\n**********************************\nOpcoes: \n1 - Cadastrar mensagem\n2 - Ler mensagens\n3 - Apagar mensagens\n4 - Sair\n**********************************\n");
+			printf("\n******************************\n* Opcoes:                    *\n*  1 - Cadastrar mensagem    *\n*  2 - Ler mensagens         *\n*  3 - Apagar mensagens      *\n*  4 - Sair                  *\n******************************\n");
 
 			/*receber e tratar a selecao*/
 			scanf("%i", &type_clt);
@@ -96,12 +97,12 @@ char **argv;
 					
 					// Nome
 					puts("\nUsuario (máximo 19 caracteres):");
-					fpurge(stdin);
+					__fpurge(stdin);
 					fgets(envio.name, NAME_SIZE, stdin);
 					strtok(envio.name, "\n");
 					// Mensagem
 					puts("Mensagem (máximo 79 caracteres):");
-					fpurge(stdin);
+					__fpurge(stdin);
 					fgets(envio.message, MSG_SIZE, stdin);
 					envio.type = 1;
 				break;
@@ -113,7 +114,7 @@ char **argv;
 					strcpy(msg, "\nMensagens removidas:");
 					
 					puts("\nUsuario:");
-					fpurge(stdin);
+					__fpurge(stdin);
 					fgets(envio.name, NAME_SIZE, stdin);
 					strtok(envio.name, "\n");
 					envio.type = 3;
@@ -124,7 +125,7 @@ char **argv;
 				default:
 					envio.type = 4;
 					puts("\nColoque um valor válido!");
-					fpurge(stdin);
+					__fpurge(stdin);
 				break;
 			}
 		}while(envio.type == 4);
