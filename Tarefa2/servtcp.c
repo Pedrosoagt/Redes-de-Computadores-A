@@ -34,7 +34,7 @@ int insertMsg(Msg list[], Msg *envio){
 	for(i = 0; i < LIST_SIZE; i++){
 		if(strcmp(list[i].name, "") == 0){
 			list[i] = *envio;
-			strcpy(envio->answer, "Mensagem incluida com sucesso!");
+			strcpy(envio->answer, "\nMensagem incluida com sucesso!");
 			envio->type = 0;
 			return 1;
 		}
@@ -54,10 +54,10 @@ int removeMsg(Msg list[], int pList, Msg *envio){
 		if(strcmp(list[i].name, envio->name) == 0){
 
 			// salvando valores
-			strcat(res, "Usuario:");
+			strcat(res, "Usuario: ");
 			strcat(res, list[i].name);
 			strcat(res, " | ");
-			strcat(res, "Mensagem:");
+			strcat(res, "Mensagem: ");
 			strcat(res, list[i].message);
 
 			//removendo
@@ -73,7 +73,7 @@ int removeMsg(Msg list[], int pList, Msg *envio){
 	return rmvdMsgs;
 }
 
-int getMsgs(Msg list[], int pList, Msg *envio){
+int getMsgs(Msg list[], int pList, Msg *envio) {
 
 	char res[ANS_SIZE] = "";
 	int i, count = 0;
@@ -82,7 +82,7 @@ int getMsgs(Msg list[], int pList, Msg *envio){
 		if(strcmp(list[i].name, "\0") != 0){
 			strcat(res, "Usuario: ");
 			strcat(res, list[i].name);
-			strcat(res, "  |  ");
+			strcat(res, " | ");
 			strcat(res, "Mensagem: ");
 			strcat(res, list[i].message);
 			count++;

@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio_ext.h>
 
 #define NAME_SIZE 20
 #define MSG_SIZE 80
@@ -79,7 +78,6 @@ char **argv;
 
 	while(1) {
 
-
 		// inicializacao padrao de valores da struct
 		strcpy(envio.name, "empty");
 		strcpy(envio.message, "empty");
@@ -87,7 +85,7 @@ char **argv;
 		do{
 
 			/*Menu Inicial*/
-			printf("Opcoes:\n1- Cadastrar mensagem\n2- Ler mensagens\n3- Apagar mensagens\n4- Sair\n");
+			printf("\n**********************************\nOpcoes: \n1 - Cadastrar mensagem\n2 - Ler mensagens\n3 - Apagar mensagens\n4 - Sair\n**********************************\n");
 
 			/*receber e tratar a selecao*/
 			scanf("%i", &type_clt);
@@ -95,27 +93,27 @@ char **argv;
 			switch(type_clt) {
 				case 1:
 					strcpy(msg, "");
-
+					
 					// Nome
-					puts("Usuario (máximo 19 caracteres):");
-					__fpurge(stdin);
+					puts("\nUsuario (máximo 19 caracteres):");
+					fpurge(stdin);
 					fgets(envio.name, NAME_SIZE, stdin);
 					strtok(envio.name, "\n");
 					// Mensagem
 					puts("Mensagem (máximo 79 caracteres):");
-					__fpurge(stdin);
+					fpurge(stdin);
 					fgets(envio.message, MSG_SIZE, stdin);
 					envio.type = 1;
 				break;
 				case 2:
-					strcpy(msg, "Mensagens cadastradas:");
+					strcpy(msg, "\nMensagens cadastradas:");
 					envio.type = 2;
 				break;
 				case 3:
-					strcpy(msg, "Mensagens removidas:");
-
-					puts("Usuario (máximo 19 caracteres):");
-					__fpurge(stdin);
+					strcpy(msg, "\nMensagens removidas:");
+					
+					puts("\nUsuario:");
+					fpurge(stdin);
 					fgets(envio.name, NAME_SIZE, stdin);
 					strtok(envio.name, "\n");
 					envio.type = 3;
@@ -125,8 +123,8 @@ char **argv;
 				break;
 				default:
 					envio.type = 4;
-					puts("Coloque um valor válido!");
-					__fpurge(stdin);
+					puts("\nColoque um valor válido!");
+					fpurge(stdin);
 				break;
 			}
 		}while(envio.type == 4);
@@ -134,7 +132,7 @@ char **argv;
 		// Finalizacao do programa
 		if(!envio.type){
 			close(s);
-			puts("Ate logo!");
+			puts("\nAte logo!");
 			exit(0);
 		}
 
