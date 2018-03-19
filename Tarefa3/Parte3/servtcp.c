@@ -164,8 +164,9 @@ char **argv;
         perror("Listen()");
         exit(4);
     }
-		while(1) {
-	    /*
+		/*loop do Fork*/
+		while (1) {
+			/*
 	     * Aceita uma conex�o e cria um novo socket atrav�s do qual
 	     * ocorrer� a comunica��o com o cliente.
 	     */
@@ -174,12 +175,8 @@ char **argv;
 	        perror("Accept()");
 	        exit(5);
 	    }
-
-	  	if ((pid = fork()) == 0) {
-				/*
-				*		Processo filho
-				*/
-				/* Recebe uma mensagem do cliente atrav�s do novo socket conectado */
+			if ((pid = fork()) == 0) {
+				/*Processo filho*/
 
 				/* Fecha o socket aguardando por conex�es */
 				close(s);
@@ -187,14 +184,15 @@ char **argv;
 				/* Processo filho obtem seu pr�prio pid */
 				fid = getpid();
 
-		    if (recv(ns, &envio, sizeof(envio), 0) == -1) {
-		        perror("Recv()");
-		        exit(6);
-		    }
-				puts("Mensagem recebida do cliente:");
-				printf("Tipo: %i | Nome: %s | Msg: %s\n", envio.type, envio.name, envio.message);
-
-				switch(envio.type) {
+				while(1) {
+			    /* Recebe uma mensagem do cliente atrav�s do novo socket conectado */
+			    if (recv(ns, &envio, sizeof(envio), 0) == -1) {
+			        perror("Recv()");
+			        exit(6);
+			    }
+					puts("Mensagem recebida do cliente:");
+					printf("Tipo: %i | Nome: %s | Msg: %s\n", envio.type, envio.name, envio.message);
+					switch(envio.type) {
 					case 1:
 						if(insertMsg(list, &envio) == 1);
 							pList++;
@@ -205,43 +203,44 @@ char **argv;
 					case 3:
 						pList -= removeMsg(list, pList, &envio);
 					break;
+					}
+
+			    /* Envia uma mensagem ao cliente atrav�s do socket conectado */
+			    if (send(ns, &envio, sizeof(envio), 0) < 0) {
+			        perror("Send()");
+			        exit(7);
+			    }
+			    printf("Mensagem enviada ao cliente: %s\n", envio.answer);
+			    /*Limpando pra proxima*/
+			    strcpy(envio.name, " ");
+			    strcpy(envio.message, " ");
+			    strcpy(envio.answer, " ");
+			    envio.type = 0;
+			}
+
+		    /* Fecha o socket conectado ao cliente */
+		    close(ns);
+
+		    /* Fecha o socket aguardando por conex�es */
+		    close(s);
+
+		    printf("Servidor terminou com sucesso.\n");
+		    exit(0);
+			}/*fim do if filho*/
+			else{
+				/*Processo pai*/
+				if (pid > 0)
+				{
+				    printf("Processo filho criado: %d\n", pid);
+
+				    /* Fecha o socket conectado ao cliente */
+				    close(ns);
 				}
-
-		    /* Envia uma mensagem ao cliente atrav�s do socket conectado */
-		    if (send(ns, &envio, sizeof(envio), 0) < 0) {
-		        perror("Send()");
-		        exit(7);
-		    }
-		    printf("Mensagem enviada ao cliente: %s\n", envio.answer);
-		    /*Limpando pra proxima*/
-		    strcpy(envio.name, " ");
-		    strcpy(envio.message, " ");
-		    strcpy(envio.answer, " ");
-		    envio.type = 0;
-
-	    /* Fecha o socket conectado ao cliente */
-	    close(ns);
-			exit(0);
-		}
-		else{
-
-			/*
-			 * Processo pai
-			 */
-
-			if (pid > 0)
-			{
-			    printf("Processo filho criado: %d\n", pid);
-
-			    /* Fecha o socket conectado ao cliente */
-			    close(ns);
-			}
-			else
-			{
-			    perror("Fork()");
-			    exit(7);
-			}
-
-		}
-	}
+				else
+				{
+				    perror("Fork()");
+				    exit(7);
+				}
+			}/*fim do else pai*/
+		}/*Fim do loop fork*/
 }
