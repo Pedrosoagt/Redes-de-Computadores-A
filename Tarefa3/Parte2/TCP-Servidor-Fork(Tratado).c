@@ -18,17 +18,17 @@ int main(argc, argv)
 int argc;
 char **argv;
 {
-    unsigned short port;       
-    char sendbuf[12];              
-    char recvbuf[12];              
-    struct sockaddr_in client; 
-    struct sockaddr_in server; 
+    unsigned short port;
+    char sendbuf[12];
+    char recvbuf[12];
+    struct sockaddr_in client;
+    struct sockaddr_in server;
     int s;                     /* Socket para aceitar conexões       */
     int ns;                    /* Socket conectado ao cliente        */
     int namelen;
     pid_t pid, fid;
     void killzombie();
-    
+
     /*
      * O primeiro argumento (argv[1]) é a porta
      * onde o servidor aguardará por conexões
@@ -55,8 +55,8 @@ char **argv;
     * IP = INADDDR_ANY -> faz com que o servidor se ligue em todos
     * os endereços IP
     */
-    server.sin_family = AF_INET;   
-    server.sin_port   = htons(port);       
+    server.sin_family = AF_INET;
+    server.sin_port   = htons(port);
     server.sin_addr.s_addr = INADDR_ANY;
 
     /*
@@ -78,7 +78,7 @@ char **argv;
 	  exit(4);
     }
 
-    signal(SIGCHLD,killzombie);//chama a função apenas se o cliente filho morrer
+    signal(SIGCHLD, killZombie);//chama a função apenas se o cliente filho morrer
     while(1)
     {
 	  /*
@@ -91,12 +91,12 @@ char **argv;
 		perror("Accept()");
 		exit(5);
 	  }
-	  
+
 	  if ((pid = fork()) == 0) {
 		/*
-		 * Processo filho 
+		 * Processo filho
 		 */
-	      
+
 		/* Fecha o socket aguardando por conexões */
 		close(s);
 
@@ -109,15 +109,15 @@ char **argv;
 		    perror("Recv()");
 		    exit(6);
 		}
-		
+
 		printf("[%d] Recebida a mensagem do endereço IP %s da porta %d\n", fid, inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 		printf("[%d] Mensagem recebida do cliente: %s\n", fid, recvbuf);
-		
+
 		printf("[%d] Aguardando 10 s ...\n", fid);
 		sleep(10);
-		
+
 		strcpy(sendbuf, "Resposta");
-		
+
 		/* Envia uma mensagem ao cliente através do socket conectado */
 		if (send(ns, sendbuf, strlen(sendbuf)+1, 0) < 0)
 		{
@@ -134,11 +134,11 @@ char **argv;
 		exit(0);
 	  }
 	  else
-	  {  
+	  {
 		/*
-		 * Processo pai 
+		 * Processo pai
 		 */
-		
+
 		if (pid > 0)
 		{
 		    printf("Processo filho criado: %d\n", pid);
@@ -149,17 +149,15 @@ char **argv;
 		else
 		{
 		    perror("Fork()");
-		    exit(7);	      
+		    exit(7);
 		}
 	  }
     }
-    
+
 
 }
-void killzombie(){
+void killZombie(){
 
-    	int status =0;
-    	while(waitpid(-1,&status,WNOHANG)>0);//kill de um pid determinado
-    }
-
-
+	int status = 0;
+	while(waitpid(-1,&status,WNOHANG)>0);//kill de um pid determinado
+}
