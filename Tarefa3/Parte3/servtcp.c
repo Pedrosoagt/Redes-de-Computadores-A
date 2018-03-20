@@ -263,7 +263,7 @@ char **argv;
 			        exit(6);
 			    }
 
-					puts("Mensagem recebida do cliente:");
+					puts("Mensagem recebida do cliente:\n");
 					printf("Tipo: %i | Nome: %s | Msg: %s\n", envio.type, envio.name, envio.message);
 
 					switch(envio.type) {
