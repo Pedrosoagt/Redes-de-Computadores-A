@@ -121,7 +121,7 @@ void *response(void *args){
 
 	newSocket 	= aux->ns;
 
-	while( aux->envio.type <= 4 && aux->envio.type > 0) {
+	while(1) {
     /* Recebe uma mensagem do cliente atraves do novo socket conectado */
     if (recv(newSocket, &aux->envio, sizeof(aux->envio), 0) == -1) {
         perror("Recv()");
