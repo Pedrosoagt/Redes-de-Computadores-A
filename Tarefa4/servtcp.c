@@ -15,7 +15,7 @@
 #define ANS_SIZE 1250
 
 /*
-* Struct to save Mensagens
+* Struct para salvar mensagens
 */
 
 typedef struct Msg {
@@ -108,9 +108,9 @@ int getMsgs(Msg list[], int pList, Msg *envio) {
 
 void *response(void *args){
 
-
 	Arguments *aux = NULL;
 	int newSocket;
+	int fin = 0;
 	struct sockaddr_in *client;
 	struct sockaddr_in *server;
 	Msg *envio;
@@ -120,11 +120,8 @@ void *response(void *args){
 	aux = (Arguments *) args; 	/* Resgatando informacoes dos parametros */
 
 	newSocket 	= aux->ns;
-	// *client 		= aux->client;
-	// *server 		= aux->server;
-	// *envio  		= aux->envio;
 
-	while(1) {
+	while(aux->envio.type != 4) {
     /* Recebe uma mensagem do cliente atraves do novo socket conectado */
     if (recv(newSocket, &aux->envio, sizeof(aux->envio), 0) == -1) {
         perror("Recv()");
@@ -145,6 +142,11 @@ void *response(void *args){
 			case 3:
 				pList -= removeMsg(list, pList, &aux->envio);
 				break;
+			case 0:
+				puts("Cliente finalizado com sucesso.");
+				aux->envio.type = -1;
+				fin = 1;
+				break;
 		}
 
     /* Envia uma mensagem ao cliente atraves do socket conectado */
@@ -154,6 +156,13 @@ void *response(void *args){
     }
 
     printf("Mensagem enviada ao cliente: %s\n", aux->envio.answer);
+
+		if(fin == 1){
+			puts("Thread finalizado");
+			shutdown(newSocket, SHUT_RDWR);
+			close(newSocket);
+			pthread_exit(0);
+		}
 
     /*Limpando pra proxima*/
     strcpy(aux->envio.name, " ");

@@ -34,6 +34,7 @@ char **argv;
 	struct hostent *hostnm;
 	struct sockaddr_in server;
 	int s;
+	int fin = 0;
 	int type_clt=0;
 	struct msg envio;
 
@@ -86,7 +87,13 @@ char **argv;
 		do{
 
 			/*Menu Inicial*/
-			printf("\n******************************\n* Opcoes:                    *\n*  1 - Cadastrar mensagem    *\n*  2 - Ler mensagens         *\n*  3 - Apagar mensagens      *\n*  4 - Sair                  *\n******************************\n");
+			puts("\n******************************");
+			puts("* Opcoes:                    *");
+			puts("*  1 - Cadastrar mensagem    *");
+			puts("*  2 - Ler mensagens         *");
+			puts("*  3 - Apagar mensagens      *");
+			puts("*  4 - Sair                  *");
+			puts("******************************");
 
 			/*receber e tratar a selecao*/
 			scanf("%i", &type_clt);
@@ -121,6 +128,7 @@ char **argv;
 				break;
 				case 4:
 					envio.type = 0;
+					fin = 1;
 				break;
 				default:
 					envio.type = 4;
@@ -130,12 +138,6 @@ char **argv;
 			}
 		}while(envio.type == 4);
 
-		// Finalizacao do programa
-		if(!envio.type){
-			close(s);
-			puts("\nAte logo!");
-			exit(0);
-		}
 
 		/* Envia a mensagem no buffer de envio para o servidor */
 		if (send(s, &envio, sizeof(envio), 0) < 0) {
@@ -143,10 +145,18 @@ char **argv;
 			exit(5);
 		}
 
-		/* Recebe a mensagem do servidor no buffer de recep��o */
+
+		/* Recebe a mensagem do servidor no buffer de recepcao */
 		if (recv(s, &envio, sizeof(envio), 0) < 0) {
 			perror("Recv()");
 			exit(6);
+		}
+
+		// Finalizacao do programa
+		if(envio.type == -1){
+			close(s);
+			puts("\nAte logo!");
+			exit(0);
 		}
 
 		// print resultado:
