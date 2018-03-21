@@ -131,11 +131,14 @@ char **argv;
 					fin = 1;
 				break;
 				default:
+					envio.type = 0;
 					puts("\nColoque um valor válido!");
 					__fpurge(stdin);
 				break;
 			}
-		}while( 0 > envio.type && envio.type <= 4);
+
+
+		}while( !envio.type );
 
 
 		/* Envia a mensagem no buffer de envio para o servidor */
@@ -165,6 +168,7 @@ char **argv;
 		printf("%s\n", envio.answer);
 
 		/*Limpando pra proxima*/
+		type_clt = 0;
 		strcpy(envio.name, "empty");
 		strcpy(envio.message, "empty");
 		strcpy(envio.answer, "\0");
