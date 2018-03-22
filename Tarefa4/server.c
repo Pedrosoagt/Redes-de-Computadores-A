@@ -26,6 +26,7 @@ typedef struct Msg {
 }Msg;
 
 typedef struct {
+	pthread_t *addr;
 	int ns;
 	struct sockaddr_in client;
 	struct sockaddr_in server;
@@ -159,6 +160,8 @@ void *response(void *args){
 
 		if(fin == 1){
 			puts("Thread finalizado");
+			free(aux->addr);
+			free(args);
 			shutdown(newSocket, SHUT_RDWR);
 			close(newSocket);
 			pthread_exit(0);
@@ -190,7 +193,7 @@ char **argv;
 		int threads = 0;
     Msg envio;			/* struct que sera enviada */
 		Arguments *params;
-		pthread_t tid[10];
+		pthread_t *tid = NULL;
 
 
 		// Inicializacao do vetor de mensagens
@@ -199,6 +202,7 @@ char **argv;
 			strcpy(list[i].name, "");
 			strcpy(list[i].message, "");
 		}
+
 
     /*
      * O primeiro argumento (argv[1]) eh a porta
@@ -262,9 +266,12 @@ char **argv;
 			params->client = client;
 			params->server = server;
 			params->envio 	= envio;
+			params->addr = (pthread_t *) malloc(sizeof(pthread_t));
+
 
 			// Criacao da thread
-			pthread_create(&(tid[threads++]), NULL, &response, (void *)params);
+			pthread_create(params->addr, NULL, &response, (void *)params);
+			pthread_detach(*params->addr);
 			// if (err != 0)
 			// 		printf("\ncan't create thread :[%s]", strerror(err));
 			// else
