@@ -9,13 +9,14 @@
 #include <pthread.h>
 
 /*Variaveis globais*/
-int threads = 0;
-int temperaturas [2]
+int temperaturas [2];
 
 typedef struct {
+	pthread_t *addr;
 	int ns;
 	struct sockaddr_in client;
 	struct sockaddr_in server;
+	int index;
 } Arguments;
 
 void *response(void *args){
@@ -25,7 +26,8 @@ void *response(void *args){
 	int fin = 0;
 	struct sockaddr_in *client;
 	struct sockaddr_in *server;
-	int tp;
+	float tp;
+	int outro;
 
 
 
@@ -36,33 +38,31 @@ void *response(void *args){
 
 	while(1) {
     /* Recebe uma mensagem do cliente atraves do novo socket conectado */
-    if (recv(newSocket, &tp, sizeof(int), 0) == -1) {
+    if (recv(newSocket, &tp, sizeof(float), 0) == -1) {
         perror("Recv()");
         exit(6);
     }
+		//------------------TRATAMENTO-------------------//
 
+		temperaturas[aux->index] = tp;
+		printf("Temperatura do Cliente %d: %f\n", aux->index, temperaturas[aux->index]);
 
+		//Achando a posição contraria do vetor
+		outro = (aux->index + 1)%2;
+
+		if (temperaturas[aux->index] > temperaturas[outro])
+			tp = 1;//Acende a luz;
+		else
+			tp = 0;
+
+		//-------------------ENVIO----------------------//
     /* Envia uma mensagem ao cliente atraves do socket conectado */
-    if (send(newSocket, &aux->envio, sizeof(aux->envio), 0) < 0) {
+    if (send(newSocket, &tp, sizeof(float), 0) < 0) {
         perror("Send()");
         exit(7);
     }
 
     printf("Mensagem enviada ao cliente!\n");
-
-		if(fin == 1){
-			puts("Thread finalizado");
-			threads--;
-			shutdown(newSocket, SHUT_RDWR);
-			close(newSocket);
-			pthread_exit(0);
-		}
-
-    /*Limpando pra proxima*/
-    strcpy(aux->envio.name, " ");
-    strcpy(aux->envio.message, " ");
-    strcpy(aux->envio.answer, " ");
-    aux->envio.type = 0;
 	}
 }
 
@@ -83,9 +83,10 @@ char **argv;
     int s;					/* Socket para aceitar conexoes */
     int ns;					/* Socket conectado ao cliente */
     int namelen;		/* tamanho do nome */
+		int threads = 0;
 		Arguments *params;
-		pthread_t tid[2];
-
+		pthread_t tid = NULL;
+		int indexMain = 0;
 
 		// Inicializacao do vetor de temperatura
 		int i;
@@ -151,13 +152,15 @@ char **argv;
 
 			// Popula os valores da variavel de argumentos
 			params = (Arguments *)malloc(sizeof(Arguments));
+			params->index = indexMain++;
 			params->ns 		= ns;
 			params->client = client;
 			params->server = server;
+			params->addr = (pthread_t *) malloc(sizeof(pthread_t));
 
 			// Criacao da thread
-			pthread_create(&(tid[threads++]), NULL, &response, (void *)params);
-			pthread_detach(tid[threads]);
+			pthread_create(params->addr, NULL, &response, (void *)params);
+			pthread_detach(*params->addr);
 			// if (err != 0)
 			// 		printf("\ncan't create thread :[%s]", strerror(err));
 			// else
