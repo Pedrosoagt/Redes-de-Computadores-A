@@ -19,6 +19,27 @@ typedef struct {
 	int index;
 } Arguments;
 
+
+// Aux functions
+
+pthread_mutex_t mutex;
+
+void inicializaMutex() {
+	pthread_mutex_init(&mutex, NULL);
+}
+
+void finalizMutex(){
+	pthread_mutex_destroy(&mutex);
+}
+
+void lockMutex() {
+	pthread_mutex_lock(&mutex);
+}
+
+void unlockMutex() {
+	pthread_mutex_unlock(&mutex);
+}
+
 void *response(void *args){
 
 	Arguments *aux = NULL;
@@ -36,6 +57,7 @@ void *response(void *args){
 	aux = (Arguments *) args; 	/* Resgatando informacoes dos parametros */
 
 	newSocket 	= aux->ns;
+	printf("Conexão feita IP: %i Porta: %i\n ",aux->client.sin_addr,ntohs(aux->server.sin_port));
 
 	while(1) {
     /* Recebe uma mensagem do cliente atraves do novo socket conectado */
@@ -43,20 +65,26 @@ void *response(void *args){
         perror("Recv()");
         exit(6);
     }
+
+
 		//------------------TRATAMENTO-------------------//
-
+		
+		//printf("Temperatura: %f\n", tp);
 		temperaturas[aux->index] = tp;
-		printf("Temperatura do Cliente %d: %f\n", aux->index, temperaturas[aux->index]);
-		printf("Cliente %i\n", inet_ntoa(aux->client.sin_addr));
-
+		
 		//Achando a posição contraria do vetor
-		outro = (aux->index + 1)%2;
+		outro = (aux->index + 1) % 2;
+		
+		//lockMutex();
 
-		if (temperaturas[aux->index] > temperaturas[outro])
+		if (temperaturas[aux->index] >= temperaturas[outro])
 			strcpy(sendbuf, "ligar");			
 		else
-			
 			strcpy(sendbuf, "desligar");
+
+		printf("Cliente(%i):%f   %s\n", aux->index, temperaturas[aux->index],sendbuf);
+			
+
 
 		//-------------------ENVIO----------------------//
     /* Envia uma mensagem ao cliente atraves do socket conectado */
@@ -65,7 +93,9 @@ void *response(void *args){
         exit(7);
     }
 
-    printf("Mensagem enviada ao cliente!\n");
+	//unlockMutex();
+
+    //printf("Mensagem enviada ao cliente!\n");
 	}
 }
 
@@ -85,17 +115,21 @@ char **argv;
     struct sockaddr_in server;
     int s;					/* Socket para aceitar conexoes */
     int ns;					/* Socket conectado ao cliente */
-    int namelen;		/* tamanho do nome */
-		int threads = 0;
-		Arguments *params;
-		pthread_t tid = NULL;
-		int indexMain = 0;
+    int namelen;			/* tamanho do nome */
+	int threads = 0;
+	Arguments *params;
+	pthread_t tid = NULL;
+	int indexMain = 0;
 
-		// Inicializacao do vetor de temperatura
-		int i;
-		for(i = 0; i < 2; i++){
-			temperaturas[i] = 0;
-		}
+
+	// Inicia mutex
+	inicializaMutex();
+
+	// Inicializacao do vetor de temperatura
+	int i;
+	for(i = 0; i < 2; i++){
+		temperaturas[i] = 0;
+	}
 
     /*
      * O primeiro argumento (argv[1]) eh a porta
@@ -154,12 +188,12 @@ char **argv;
 	    }
 
 			// Popula os valores da variavel de argumentos
-			params = (Arguments *)malloc(sizeof(Arguments));
-			params->index = indexMain++;
-			params->ns 		= ns;
-			params->client = client;
-			params->server = server;
-			params->addr = (pthread_t *) malloc(sizeof(pthread_t));
+			params 		= (Arguments *)malloc(sizeof(Arguments));
+			params->index 	= indexMain++;
+			params->ns 	= ns;
+			params->client 	= client;
+			params->server 	= server;
+			params->addr 	= (pthread_t *) malloc(sizeof(pthread_t));
 
 			// Criacao da thread
 			pthread_create(params->addr, NULL, &response, (void *)params);
@@ -174,6 +208,9 @@ char **argv;
 
     /* Fecha o socket aguardando por conexoes */
     close(s);
+
+	// Finaliza Mutex
+	finalizMutex();
 
     printf("Servidor terminou com sucesso.\n");
     exit(0);
