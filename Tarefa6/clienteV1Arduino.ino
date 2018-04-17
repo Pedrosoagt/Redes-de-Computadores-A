@@ -2,10 +2,10 @@
 #include <SPI.h>
 
 // MAC Address
-byte mac[] = { 0x90, 0xA2, 0xDA, 0x0F, 0xBA, 0x3F }; // Port 2
-//byte mac[] = { 0x90, 0xA2, 0xDA, 0x0F, 0xBA, 0x5A }; // Port 1
+byte mac[] = { 0x90, 0xA2, 0xDA, 0x0F, 0xBA, 0xAF }; // Port 0
+//byte mac[] = { 0x90, 0xA2, 0xDA, 0x0F, 0xB9, 0x7B}; // Port 1
 
-byte ip[] = { 172,16,14,73 };//só se decidir setar 172.16.238.104:80
+//byte ip[] = { 172,16,14,73 };//só se decidir setar 172.16.238.104:80
 // Inicia o servidor na porta 80
 byte server[] = {172,16,14,70 }; // Google
 
@@ -39,10 +39,11 @@ void loop()
    Serial.print("Temperatura: ");
    Serial.println(temperatura);
 
-   digitalWrite(10,LOW);
+   //digitalWrite(10,LOW);
    
    byte *b = (byte*)&temperatura;
    client.write(b,4);
+   //delay(10000);
    
   if (client.available()) {
     String c = client.readString();//
@@ -50,13 +51,20 @@ void loop()
 
     if(c.equals("ligar"))
     {  
-       Serial.print("ip");
+       Serial.print("Ligar");
        digitalWrite(10,HIGH);
+       delay(10000);
+       Serial.print("Acabou delay");
     }
     else
     {
+      Serial.print("Else Desligar");
       digitalWrite(10,LOW);
+      delay(10000);
     }   
+    
+    //digitalWrite(10,LOW);
+    
   }
 
   if (!client.connected()) {
