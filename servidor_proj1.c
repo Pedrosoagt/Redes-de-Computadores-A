@@ -51,7 +51,7 @@ void *response(void *args){
 	float tp;
 	int status;
 	int nu_pessoas;
-	char sendbuf[8];  
+	char sendbuf[8];
 
 
 
@@ -70,23 +70,28 @@ void *response(void *args){
 
 
 		//------------------TRATAMENTO-------------------//
-		
-		printf("Temperatura: %f\n", tp);
-		temperaturas[aux->index] = tp;
-
-
-		printf("Status: %d\n", status);
-		if(status > 0){
-			contador++;
+		if(status == -1){
+			//------------------------TRATAMENTO do Cliente-----------------//
 		}
 		else{
-			contador--;
-		}
-		printf("Contador: %d", contador);
+			printf("Temperatura: %f\n", tp);
+			temperaturas[aux->index] = tp;
 
-		/* Modificar para a comparação com a lista da Casos */
-		printf("Cliente(%i):%f\n", aux->index, temperaturas[aux->index]);
+			printf("Status: %d\n", status);
 			
+			if(status > 0){
+				contador++;
+			}
+			else{
+				contador--;
+			}
+			printf("Contador: %d", contador);
+
+			/* Modificar para a comparação com a lista da Casos */
+			printf("Cliente(%i):%f\n", aux->index, temperaturas[aux->index]);
+		}
+
+
 
 
 		//-------------------ENVIO----------------------//
@@ -214,4 +219,3 @@ char **argv;
     printf("Servidor terminou com sucesso.\n");
     exit(0);
 }
-
