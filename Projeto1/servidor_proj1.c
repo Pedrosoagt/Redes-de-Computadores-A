@@ -20,28 +20,13 @@ typedef struct {
 	int index;
 } Arguments;
 
-
 // Aux functions
 
-pthread_mutex_t mutex;
-
-void inicializaMutex() {
-	pthread_mutex_init(&mutex, NULL);
+void requestClient() {
+	contador = contador;
 }
 
-void finalizMutex(){
-	pthread_mutex_destroy(&mutex);
-}
-
-void lockMutex() {
-	pthread_mutex_lock(&mutex);
-}
-
-void unlockMutex() {
-	pthread_mutex_unlock(&mutex);
-}
-
-void *response(void *args){
+void *response(void *args) {
 
 	Arguments *aux = NULL;
 	int newSocket;
@@ -68,50 +53,31 @@ void *response(void *args){
         exit(6);
     	}
 
+    	status == 1 ? ++contador : (status == 0 ? --contador : requestClient());
 
-		//------------------TRATAMENTO-------------------//
-		if(status == -1){
-			//------------------------TRATAMENTO do Cliente-----------------//
-		}
-		else{
 			printf("Temperatura: %f\n", tp);
 			temperaturas[aux->index] = tp;
-
+			
 			printf("Status: %d\n", status);
 			
-			if(status > 0){
-				contador++;
-			}
-			else{
-				contador--;
-			}
 			printf("Contador: %d", contador);
 
 			/* Modificar para a comparação com a lista da Casos */
 			printf("Cliente(%i):%f\n", aux->index, temperaturas[aux->index]);
-		}
-
-
-
+	}
 
 		//-------------------ENVIO----------------------//
     		/* Nessa parte será feito o */
 
-	//unlockMutex();
-
     //printf("Mensagem enviada ao cliente!\n");
-	}
 }
-
-
 
 /*
  * Servidor TCP
  */
 void main(argc, argv)
 int argc;
-char **argv;
-{
+char **argv; {
     unsigned short port;
     char sendbuf[12];
     char recvbuf[12];
@@ -124,10 +90,6 @@ char **argv;
 	Arguments *params;
 	pthread_t tid = NULL;
 	int indexMain = 0;
-
-
-	// Inicia mutex
-	inicializaMutex();
 
 	// Inicializacao do vetor de temperatura
 	int i;
@@ -212,9 +174,6 @@ char **argv;
 
     /* Fecha o socket aguardando por conexoes */
     close(s);
-
-	// Finaliza Mutex
-	finalizMutex();
 
     printf("Servidor terminou com sucesso.\n");
     exit(0);
