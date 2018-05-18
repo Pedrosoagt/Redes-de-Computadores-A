@@ -5,7 +5,7 @@
 
 /* Escolhe a temperatura de acordo com o BD
  * Retorna: Temperatura escolhida (float)
- */
+ *//*
 float chooseTemp(Status states[], int numPeople) {
 
   int index;
@@ -22,16 +22,23 @@ float chooseTemp(Status states[], int numPeople) {
     return result;
   }
 }
-
+*/
 void main() {
 
   // Inicialização do vetor que será usado como BD
   Node *states = NULL;
 
-  Status ex = NULL;
+  Status ex;
   ex.numPeople = 14;
-  ex.temperature = 25.7;
+  ex.temperature = 25.70;
 
-  insert(states, ex);
-  print("Numero de pessoas: %i, Temp: %f", states->state.numPeople, states->state.temperature);
+  if( insert(states, ex) ) puts("Inserção completa com sucesso");
+  else puts("Houve um erro com a inserção");
+
+  if( find(states, ex.numPeople) ) puts("Alvo encontrado");
+  else puts("Alvo não encontrado");
+
+  printf("Ex: Numero de pessoas: %i, Temp: %f\n", ex.numPeople, ex.temperature);
+  // Not working: printf("Temp: %f\n", states->state.temperature);
+  puts("batata");
 }

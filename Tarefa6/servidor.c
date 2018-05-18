@@ -49,8 +49,7 @@ void *response(void *args){
 	struct sockaddr_in *server;
 	float tp;
 	int outro;
-	char sendbuf[8];  
-
+	char sendbuf[8];
 
 
 	// Atribuicoes
@@ -68,22 +67,22 @@ void *response(void *args){
 
 
 		//------------------TRATAMENTO-------------------//
-		
+
 		//printf("Temperatura: %f\n", tp);
 		temperaturas[aux->index] = tp;
-		
+
 		//Achando a posição contraria do vetor
 		outro = (aux->index + 1) % 2;
-		
+
 		//lockMutex();
 
 		if (temperaturas[aux->index] >= temperaturas[outro])
-			strcpy(sendbuf, "ligar");			
+			strcpy(sendbuf, "ligar");
 		else
 			strcpy(sendbuf, "desligar");
 
 		printf("Cliente(%i):%f   %s\n", aux->index, temperaturas[aux->index],sendbuf);
-			
+
 
 
 		//-------------------ENVIO----------------------//

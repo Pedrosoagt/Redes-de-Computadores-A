@@ -1,17 +1,17 @@
 #ifndef LIST_H
 #define LIST_H
 
-typedef struct status {
+typedef struct weather_t {
   int numPeople;
   float temperature;
-} Status;
+} Weather;
 
 typedef struct  node {
-  Status state;
-  int *next;
+  Weather card;
+  struct node *next;
 } Node;
 
-int insert(Node *, Status);
+int insert(Node **, Weather);
 
 /* Busca para verificar se já existe uma correspondência no BD
  * Retorna: inteiro;
