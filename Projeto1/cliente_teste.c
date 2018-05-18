@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio_ext.h>
+#include <stdio.h>
 
-void main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {
@@ -17,9 +17,8 @@ char **argv;
   struct hostent *hostnm;
   struct sockaddr_in server;
   int s;
-	int fin = 0;
 	int type_clt=0;
-  int status = 0;
+  int status = -1;
   float temperatura = 0;
 
   /*
@@ -63,22 +62,11 @@ char **argv;
  		exit(4);
  	}
 
-  /*--------------------Escolhe uma temperatura-------------*/
   printf("Digite Uma temperatura\n");
-  scanf("%f\n", &temperatura);
+  scanf("%f", &temperatura);
 
-  /*-------------------Escolhe um estado-----------------------*/
-  printf("Digite um estado\n");
-  scanf("%d\n", &status);
-
-  /*----------------Envio do float-----------------------------*/
-  if (send(s, &temperatura, sizeof(float), 0) < 0) {
-    perror("Send()");
-    exit(5);
-  }
-
-  /*----------------Envio do int------------------------------*/
-  if (send(s, &status, sizeof(int), 0) < 0) {
+  /*----------------Envio-----------------------------*/
+  if (send(s, &temperatura, sizeof(float), 0) &&  (send(s, &status, sizeof(int), 0)) < 0) {
     perror("Send()");
     exit(5);
   }
