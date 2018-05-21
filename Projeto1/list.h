@@ -1,15 +1,21 @@
 #ifndef LIST_H
 #define LIST_H
+#include <stdbool.h>
 
-typedef struct weather_t {
+
+struct weather_t {
   int numPeople;
   float temperature;
-} Weather;
+  bool flag;
+};
 
-typedef struct  node {
-  Weather card;
-  struct node *next;
-} Node;
+struct node_t {
+  struct weather_t card;
+  struct node_t *next;
+};
+
+typedef struct weather_t Weather;
+typedef struct node_t Node;
 
 int insert(Node **, Weather);
 
@@ -19,4 +25,5 @@ int insert(Node **, Weather);
  */
 int find(Node *, int);
 
+float findAdjacents(Node *, float);
 #endif

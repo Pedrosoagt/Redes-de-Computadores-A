@@ -6,15 +6,12 @@
 
 int insert(Node **pNode, Weather target) {
 
-  puts("INSERT: Begin insert");
-
   // Se for uma posição vazia, já houver um número existente
   if(!(*pNode)) {
     // Aloca um novo endereço pra armazenar as novas informações e verifica
     //  se houve sucesso.
     Node *aux = (Node *) malloc(sizeof(Node));
     if (!aux) return 0;   // Caso falhe, retorna falha
-    printf("INSERT: Endereço de Aux: %li\n", aux);
 
     // Inicializa os campos com os valores pré determinados
     aux->next = NULL;
@@ -22,31 +19,40 @@ int insert(Node **pNode, Weather target) {
 
     // Associa o novo espaço populado com a lista
     (*pNode) = aux;
-    puts("INSERT: Card created");
-    printf("INSERT: Num: %i, Temp: %f\n", (*pNode)->card.numPeople, (*pNode)->card.temperature);
+    puts("Card created");
     return 1;   // Retorna sucesso
   }
   else if((*pNode)->card.numPeople == target.numPeople) {
-      puts("INSERT: Card overwrited");
       (*pNode)->card = target;
       return 1;
   }
   else{
-    printf("INSERT: Procurando valor\n");
+    printf("Searching insertion place\n");
     return insert(&((*pNode)->next), target); // Continua procurando
   }
 }
 
 int find(Node *node, int target) {
-  puts("FIND: Begin Find");
+
   static int index = 0;
 
-  if (!node){
-     return -1;
-   }
-  else if (node->card.numPeople == target){printf("FIND: ACHOU\n"); return index;}
+  if (!node) return -1;
+  if (node->card.numPeople == target) return index;
   else {
     index++;
     return find(node->next, target);
+  }
+}
+
+float findAdjacents(Node *node, float target) {
+
+  puts("Searching value");
+  static float temp = 0;
+
+  if(!node) return temp;
+  else if(node->card.numPeople > target) return temp;
+  else {
+    temp = node->card.temperature;
+    return findAdjacents(node->next, target);
   }
 }

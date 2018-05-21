@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <math.h>
 #include "list.h"
+#include <stdbool.h>
 
 
 /* Constants */
@@ -21,12 +22,6 @@ int counter = 0;
 Node *list = NULL;  /* Array de temperaturas */
 float roomTemp = 25;
 
-/* Algoritmo:
-	Ao pedir temp:
-		Olha termometro;
-		Se for condizente, seta
-		se não, sugere uma temp melhor
-*/
 
 typedef struct {
 	pthread_t *addr;
@@ -56,18 +51,30 @@ int requestClient(float *reqTemp, float roomTemp) {
 		Weather aux;
 		aux.numPeople = counter;
 		aux.temperature = *reqTemp;
-		aux.flag = FALSE;
+		aux.flag = false;
 
-		if( insert(&list, aux) ) puts("REQUESTCLIENT: Nova temperatura inserida");
-		else puts("REQUESTCLIENT: Falha na insercao da nova temperatura");
+		if( insert(&list, aux) ) puts("Insertion concluded");
+		else puts("Insertion failed");
 
 		return 1;
 	}
 	else {
-		puts("Recebeu como arduíno");
+		puts("Arduino feedback");
 
-		*roomTemp = find(list, *roomTemp);
+		roomTemp = (*reqTemp + findAdjacents(list, counter)) / 2;
+
+		Weather aux;
+		aux.numPeople = counter;
+		aux.temperature = roomTemp;
+		aux.flag = false;
+
+		insert(&list, aux);
+		*reqTemp = roomTemp;
+
+		return 1;
 	}
+
+	return 0;
 }
 
 void *response(void *args) {
@@ -86,7 +93,7 @@ void *response(void *args) {
 	aux = (Arguments *) args; 	/* Resgatando informacoes dos parametros */
 
 	newSocket = aux->ns;
-	printf("RESPONSE: Conexão feita IP: %i Porta: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
+	printf("Connected IP: %i Port: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
 
 	while(1) {
 		/* Recebe uma mensagem do cliente atraves do novo socket conectado */
@@ -114,10 +121,10 @@ void *response(void *args) {
 			sendData(newSocket, &tp);
 		}
 
-		if( find(list, 22) ) puts("RESPONSE: Achouuuu");
-		else puts("RESPONSE: Eroooooooow");
+		shutdown(newSocket, SHUT_RDWR);
 
-		printf("RESPONSE: Num: %i, Temp: %g\n", list->card.numPeople, list->card.temperature);
+		if( find(list, 22) ) puts("Temperature found");
+		else puts("Temperature not found");
 	}
 }
 

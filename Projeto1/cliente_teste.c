@@ -72,7 +72,7 @@ char **argv;
   }
 
   /* Fecha o socket */
-	close(s);
+	shutdown(s, SHUT_RDWR);
 
 	printf("Cliente terminou com sucesso.\n");
 	exit(0);
