@@ -44,29 +44,29 @@ void sendData(int ns, float *data) {
 }
 
 // Verifica se uma temperatura está próxima da outra
-int isCloseTo(float reqTemp, float roomTemp){
+int isCloseTo(float reqTemp){
 	return abs(reqTemp - roomTemp) <= MAX_RANGE ? 1 : 0;
 }
 
 //verifica se houve mudança na base de dados
 int requestClient(float *reqTemp, float roomTemp) {
 
-	if(isCloseTo(*reqTemp, roomTemp)) {
+	if(isCloseTo(*reqTemp)) {
 
 		Weather aux;
 		aux.numPeople = counter;
 		aux.temperature = *reqTemp;
-		if( insert(&list, aux) ) puts("Nova temperatura inserida");
-		else puts("Falha na insercao da nova temperatura");
+		aux.flag = FALSE;
+
+		if( insert(&list, aux) ) puts("REQUESTCLIENT: Nova temperatura inserida");
+		else puts("REQUESTCLIENT: Falha na insercao da nova temperatura");
+
 		return 1;
 	}
 	else {
 		puts("Recebeu como arduíno");
-		/*
-		// Sugere outra temp melhor
-		*reqTemp =
-		return 0;
-		*/
+
+		*roomTemp = find(list, *roomTemp);
 	}
 }
 
@@ -86,7 +86,7 @@ void *response(void *args) {
 	aux = (Arguments *) args; 	/* Resgatando informacoes dos parametros */
 
 	newSocket = aux->ns;
-	printf("Conexão feita IP: %i Porta: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
+	printf("RESPONSE: Conexão feita IP: %i Porta: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
 
 	while(1) {
 		/* Recebe uma mensagem do cliente atraves do novo socket conectado */
@@ -107,17 +107,17 @@ void *response(void *args) {
 		insert(&list, ex);
 
 		// Status -1, controla para send de usuário
-		if(status =! -1) {
+		if(status != -1) {
 			if(validTemp)
 			 	sendData(newSocket, &tp);
 		}else {
 			sendData(newSocket, &tp);
 		}
 
-		if( find(list, 22) ) puts("Achouuuu");
-		else puts("Eroooooooow");
+		if( find(list, 22) ) puts("RESPONSE: Achouuuu");
+		else puts("RESPONSE: Eroooooooow");
 
-		printf("Num: %i, Temp: %g", list->card.numPeople, list->card.temperature);
+		printf("RESPONSE: Num: %i, Temp: %g\n", list->card.numPeople, list->card.temperature);
 	}
 }
 

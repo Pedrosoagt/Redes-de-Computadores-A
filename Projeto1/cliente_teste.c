@@ -66,7 +66,7 @@ char **argv;
   scanf("%f", &temperatura);
 
   /*----------------Envio-----------------------------*/
-  if (send(s, &temperatura, sizeof(float), 0) &&  (send(s, &status, sizeof(int), 0)) < 0) {
+  if (send(s, &temperatura, sizeof(float), 0) && (send(s, &status, sizeof(int), 0)) < 0) {
     perror("Send()");
     exit(5);
   }
