@@ -87,7 +87,7 @@ void *response(void *args) {
 	struct sockaddr_in *client;
 	struct sockaddr_in *server;
 	int newSocket;
-	int status;
+	float status;
 	int validTemp;
 	float tp;
 	char sendbuf[8];
@@ -99,20 +99,30 @@ void *response(void *args) {
 	printf("Connected IP: %i Port: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
 
 	/* Recebe uma mensagem do cliente atraves do novo socket conectado */
-	if ((recv(newSocket, &tp, sizeof(float), 0) && recv(newSocket, &status, sizeof(int), 0)) == -1) {
+	if (recv(newSocket, &tp, sizeof(float), 0) == -1) {
     perror("Recv()");
     exit(6);
 	}
 
-	// Identifica a origem do dado
-	status == 1 ? ++counter : (status == 0 ? --counter : (validTemp = requestClient(&tp, roomTemp)));
+	if (recv(newSocket, &status, sizeof(int), 0) == -1) {
+	    perror("Recv()");
+	    exit(6);
+	}
+	
 
+	
+	// Identifica a origem do dado
+	printf("\nTemp:%f\n",tp);
+	printf("status:%f\n",status);
+
+	status == 1 ? ++counter : (status == 0 ? --counter : (validTemp = requestClient(&tp, roomTemp)));
+	printf("contador: %i\n", counter);
  	sendData(newSocket, &tp);
 	printList(list);
 
 	// Mantém o servidor rodando mesmo com a conexão do cliente finalizada
-	shutdown(newSocket, SHUT_RDWR);
-	close(newSocket);
+	//shutdown(newSocket, SHUT_RDWR);
+	//close(newSocket);
 }
 
 /*
