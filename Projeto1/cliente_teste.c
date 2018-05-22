@@ -17,7 +17,7 @@ char **argv;
   struct hostent *hostnm;
   struct sockaddr_in server;
   int s;
-	int type_clt=0;
+	int type_clt = 0;
   int status = -1;
   float temperatura = 0;
 
@@ -71,9 +71,12 @@ char **argv;
     exit(5);
   }
 
-  /* Fecha o socket */
-	shutdown(s, SHUT_RDWR);
+  if (recv(s, &temperatura, sizeof(temperatura), 0) < 0) {
+    perror("Recv()");
+    exit(6);
+  }
+
+  printf("Temperatura ar condicionado: %.2f", temperatura);
 
 	printf("Cliente terminou com sucesso.\n");
-	exit(0);
 }

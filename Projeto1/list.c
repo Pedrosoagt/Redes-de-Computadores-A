@@ -32,18 +32,6 @@ int insert(Node **pNode, Weather target) {
   }
 }
 
-int find(Node *node, int target) {
-
-  static int index = 0;
-
-  if (!node) return -1;
-  if (node->card.numPeople == target) return index;
-  else {
-    index++;
-    return find(node->next, target);
-  }
-}
-
 float findAdjacents(Node *node, float target) {
 
   puts("Searching value");
@@ -54,5 +42,12 @@ float findAdjacents(Node *node, float target) {
   else {
     temp = node->card.temperature;
     return findAdjacents(node->next, target);
+  }
+}
+
+void printList(Node *list) {
+  if(list) {
+    printf("Numero pessoas: %i, Temperatura: %.2f\n", list->card.numPeople, list->card.temperature);
+    printList(list->next);
   }
 }

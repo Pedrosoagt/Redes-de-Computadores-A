@@ -35,7 +35,7 @@ typedef struct {
 
 // Envia dados pela função send
 void sendData(int ns, float *data) {
-	send(ns, &data, sizeof(*data), 0);
+	send(ns, data, sizeof(typeof(*data)), 0);
 }
 
 // Verifica se uma temperatura está próxima da outra
@@ -46,7 +46,9 @@ int isCloseTo(float reqTemp){
 //verifica se houve mudança na base de dados
 int requestClient(float *reqTemp, float roomTemp) {
 
-	if(isCloseTo(*reqTemp)) {
+	if( isCloseTo(*reqTemp) ) {
+
+		puts("Client feedback");
 
 		Weather aux;
 		aux.numPeople = counter;
@@ -68,7 +70,9 @@ int requestClient(float *reqTemp, float roomTemp) {
 		aux.temperature = roomTemp;
 		aux.flag = false;
 
-		insert(&list, aux);
+		if( insert(&list, aux) ) puts("Insertion concluded");
+		else puts("Insertion failed");
+
 		*reqTemp = roomTemp;
 
 		return 1;
@@ -89,43 +93,26 @@ void *response(void *args) {
 	char sendbuf[8];
 
 
-	// Atribuicoes
 	aux = (Arguments *) args; 	/* Resgatando informacoes dos parametros */
-
 	newSocket = aux->ns;
+
 	printf("Connected IP: %i Port: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
 
-	while(1) {
-		/* Recebe uma mensagem do cliente atraves do novo socket conectado */
-		if ((recv(newSocket, &tp, sizeof(float), 0) && recv(newSocket, &status, sizeof(int), 0)) == -1) {
-	    perror("Recv()");
-	    exit(6);
-		}
-
-		// Identifica a origem do dado
-		status == 1 ? ++counter : (status == 0 ? --counter : (validTemp = requestClient(&tp, roomTemp)));
-
-		/*-----------------*/
-		Weather ex;
-
-		ex.numPeople = 15;
-		ex.temperature = 23.7;
-
-		insert(&list, ex);
-
-		// Status -1, controla para send de usuário
-		if(status != -1) {
-			if(validTemp)
-			 	sendData(newSocket, &tp);
-		}else {
-			sendData(newSocket, &tp);
-		}
-
-		shutdown(newSocket, SHUT_RDWR);
-
-		if( find(list, 22) ) puts("Temperature found");
-		else puts("Temperature not found");
+	/* Recebe uma mensagem do cliente atraves do novo socket conectado */
+	if ((recv(newSocket, &tp, sizeof(float), 0) && recv(newSocket, &status, sizeof(int), 0)) == -1) {
+    perror("Recv()");
+    exit(6);
 	}
+
+	// Identifica a origem do dado
+	status == 1 ? ++counter : (status == 0 ? --counter : (validTemp = requestClient(&tp, roomTemp)));
+
+ 	sendData(newSocket, &tp);
+	printList(list);
+
+	// Mantém o servidor rodando mesmo com a conexão do cliente finalizada
+	shutdown(newSocket, SHUT_RDWR);
+	close(newSocket);
 }
 
 /*
@@ -214,10 +201,7 @@ char **argv; {
 		// Criacao da thread
 		pthread_create(params->addr, NULL, &response, (void *)params);
 		pthread_detach(*params->addr);
-		// if (err != 0)
-		// 		printf("\ncan't create thread :[%s]", strerror(err));
-		// else
-		// 		printf("\n Thread created successfully\n");
+
 	}
 
   /* Fecha o socket aguardando por conexoes */

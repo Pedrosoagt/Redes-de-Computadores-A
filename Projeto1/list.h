@@ -20,10 +20,9 @@ typedef struct node_t Node;
 int insert(Node **, Weather);
 
 /* Busca para verificar se já existe uma correspondência no BD
- * Retorna: inteiro;
- *  Index no sucesso | -1 na falha
+ * Retorna: temperatura imediatamente anterior ao target (float)
  */
-int find(Node *, int);
-
 float findAdjacents(Node *, float);
+
+void printList(Node *);
 #endif
