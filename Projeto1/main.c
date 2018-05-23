@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
-#include <mach/error.h>
+#include <error.h>
 #include <pthread.h>
 #include <math.h>
 #include "list.h"
@@ -88,7 +88,6 @@ void *response(void *args) {
 	struct sockaddr_in *server;
 	int newSocket;
 	float status;
-	int validTemp;
 	float tp;
 	char sendbuf[8];
 
@@ -98,24 +97,32 @@ void *response(void *args) {
 
 	printf("Connected IP: %i Port: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
 
-	/* Recebe uma mensagem do cliente atraves do novo socket conectado */
-	if (recv(newSocket, &tp, sizeof(float), 0) && recv(newSocket, &status, sizeof(float), 0) == -1) {
-    perror("Recv()");
-    exit(6);
-	}	
-	
-	// Identifica a origem do dado
-	printf("\nTemp:%f\n",tp);
-	printf("status:%f\n",status);
+	do{
+		/* Recebe uma mensagem do cliente atraves do novo socket conectado */
+		if (recv(newSocket, &tp, sizeof(float), 0) && recv(newSocket, &status, sizeof(float), 0) == -1) {
+	    perror("Recv()");
+	    exit(6);
+		}
 
-	status == 1 ? ++counter : (status == 0 && counter > 0 ? --counter : (validTemp = requestClient(&tp, roomTemp)));
-	printf("contador: %i\n", counter);
- 	sendData(newSocket, &tp);
-	printList(list);
+		// Identifica a origem do dado
+		printf("\nTemp:%f\n",tp);
+		printf("Status:%.0f\n\n",status);
 
-	// Mantém o servidor rodando mesmo com a conexão do cliente finalizada
-	//shutdown(newSocket, SHUT_RDWR);
-	//close(newSocket);
+		status == 1 ? ++counter : (status == 0 && counter > 0 ? --counter : (requestClient(&tp, roomTemp)));
+		
+		printf("Número de pessoas na sala: %i\n", counter);
+	 	sendData(newSocket, &tp);
+		printList(list);
+
+		if(status == -1){
+			shutdown(newSocket, SHUT_RDWR);
+			close(newSocket);
+			pthread_exit(0);
+		}
+		// limpa status
+		status = 5;
+	}while(1);
+
 }
 
 /*
