@@ -194,12 +194,12 @@ char **argv; {
     }
 
 		// Popula os valores da variavel de argumentos
-		params 					= (Arguments *)malloc(sizeof(Arguments));
+		params 			= (Arguments *)malloc(sizeof(Arguments));
 		params->index 	= indexMain++;
-		params->ns 			= ns;
+		params->ns 		= ns;
 		params->client 	= client;
 		params->server 	= server;
-		params->addr 		= (pthread_t *) malloc(sizeof(pthread_t));
+		params->addr 	= (pthread_t *) malloc(sizeof(pthread_t));
 
 		// Criacao da thread
 		pthread_create(params->addr, NULL, &response, (void *)params);
