@@ -18,7 +18,7 @@ char **argv;
   struct sockaddr_in server;
   int s;
 	int type_clt = 0;
-  int status = -1;
+  float status = -1;
   float temperatura = 0;
 
   /*
@@ -66,7 +66,7 @@ char **argv;
   scanf("%f", &temperatura);
 
   /*----------------Envio-----------------------------*/
-  if (send(s, &temperatura, sizeof(float), 0) && (send(s, &status, sizeof(int), 0)) < 0) {
+  if (send(s, &temperatura, sizeof(float), 0) && (send(s, &status, sizeof(float), 0)) < 0) {
     perror("Send()");
     exit(5);
   }

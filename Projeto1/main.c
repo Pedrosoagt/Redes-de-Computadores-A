@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
-#include <error.h>
+#include <mach/error.h>
 #include <pthread.h>
 #include <math.h>
 #include "list.h"
@@ -40,7 +40,7 @@ void sendData(int ns, float *data) {
 
 // Verifica se uma temperatura está próxima da outra
 int isCloseTo(float reqTemp){
-	return abs(reqTemp - roomTemp) <= MAX_RANGE ? 1 : 0;
+	return fabs(reqTemp - roomTemp) <= MAX_RANGE ? 1 : 0;
 }
 
 //verifica se houve mudança na base de dados
@@ -99,23 +99,16 @@ void *response(void *args) {
 	printf("Connected IP: %i Port: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
 
 	/* Recebe uma mensagem do cliente atraves do novo socket conectado */
-	if (recv(newSocket, &tp, sizeof(float), 0) == -1) {
+	if (recv(newSocket, &tp, sizeof(float), 0) && recv(newSocket, &status, sizeof(float), 0) == -1) {
     perror("Recv()");
     exit(6);
-	}
-
-	if (recv(newSocket, &status, sizeof(int), 0) == -1) {
-	    perror("Recv()");
-	    exit(6);
-	}
-	
-
+	}	
 	
 	// Identifica a origem do dado
 	printf("\nTemp:%f\n",tp);
 	printf("status:%f\n",status);
 
-	status == 1 ? ++counter : (status == 0 ? --counter : (validTemp = requestClient(&tp, roomTemp)));
+	status == 1 ? ++counter : (status == 0 && counter > 0 ? --counter : (validTemp = requestClient(&tp, roomTemp)));
 	printf("contador: %i\n", counter);
  	sendData(newSocket, &tp);
 	printList(list);
@@ -128,7 +121,7 @@ void *response(void *args) {
 /*
  * Servidor TCP
  */
-void main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv; {
   unsigned short port;
