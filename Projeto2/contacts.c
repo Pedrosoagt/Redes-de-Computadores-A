@@ -19,7 +19,7 @@ bool createContact(ContactCollection **pNode, Contact target){
   if(!(*pNode)) {
     // Aloca um novo endereço pra armazenar as novas informações e verifica
     //  se houve sucesso.
-    ContactCollection *aux = (ContactCollection *) malloc(sizeof(ContactCollection));
+    ContactCollection *aux = createCollection();
     if (!aux) return false;   // Caso falhe, retorna falha
 
     // Inicializa os campos com os valores pré determinados
@@ -63,4 +63,20 @@ void printContacts(ContactCollection *list) {
     printf("Número de tel: %s\n", list->info.num);
     printContacts(list->next);
   }
+}
+
+bool removeContact(ContactCollection **pNode, Contact target) {
+
+  // Se alcançou o final, retorna falha
+  if(!(*pNode)) return false;
+  // Caso contrario, verifica se o item atual é igual ao procurado
+  else if(strcmp((*pNode)->info.num, target.num) == 0) {
+    ContactCollection *aux;
+    aux = (*pNode);
+    (*pNode) = (*pNode)->next;
+    free(aux);
+    return true;
+  }
+  // Se não for, continue procurando
+  return removeContact(&((*pNode)->next), target);
 }

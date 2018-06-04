@@ -7,9 +7,12 @@
 #include <unistd.h>
 #include <error.h>
 #include <pthread.h>
+#include "contacts.h"
 
-/*Variaveis globais*/
+// Constantes
+#define BUFF_SIZE 16
 
+// Structs
 typedef struct {
 	pthread_t *addr;
 	int ns;
@@ -17,6 +20,11 @@ typedef struct {
 	struct sockaddr_in server;
 	int index;
 } Arguments;
+
+/*Variaveis globais*/
+ContactCollection *contactList = NULL;
+
+
 
 
 
@@ -40,16 +48,19 @@ void unlockMutex() {
 	pthread_mutex_unlock(&mutex);
 }
 
+// Envia dados pela função send
+void sendData(int ns, char *data) {
+	send(ns, data, sizeof(typeof(*data)), 0);
+}
+
 void *response(void *args){
 
 	Arguments *aux = NULL;
 	int newSocket;
 	int fin = 0;
-  char sendbuf[16];
-  char rcvbuf[16];
-	struct sockaddr_in *client;
-  struct sockaddr_in *target;
-	struct sockaddr_in *server;
+  char sendbuf[BUFF_SIZE];
+  char rcvbuf[BUFF_SIZE];
+
 
 
 	// Atribuicoes
@@ -60,31 +71,30 @@ void *response(void *args){
 
 	while(1) {
     /* Recebe uma mensagem do cliente atraves do novo socket conectado */
-    if (recv(newSocket, &rcvbuf, sizeof(float), 0) == -1) {
+    if (recv(newSocket, &rcvbuf, BUFF_SIZE, 0) == -1) {
         perror("Recv()");
         exit(6);
     }
 
+		printf("Cliente(%i)\n", aux->index);
 
-		//------------------TRATAMENTO-------------------//
-		//----TRATAMENTO DE USUÁRIO----//
+		//-------------------------CADASTRO----------------------------//
+		// Na primeira vez, todos os clientes devem se identificar para o cadastro inicial
+		Contact newContact;
+		newContact.local = aux->client;
+		strcpy(newContact.num, rcvbuf);
 
+		lockMutex();		// Prevencao de dados inconsistentes
 
-		//----TRATAMENTO DE REQUISIÇÃO----//
-		//lockMutex();
+		// Insere o novo contato na lista de contatos
+		if(createContact(&contactList, newContact)) strcpy(sendbuf, "Success");
+		else strcpy(sendbuf, "Failed");
 
-		printf("Cliente(%i):%f   %s\n", aux->index, sendbuf);
+		unlockMutex();	// Prevencao de dados inconsistentes
 
-
-
-		//-------------------ENVIO----------------------//
     /* Envia uma mensagem ao cliente atraves do socket conectado */
-    if (send(newSocket, &sendbuf, strlen(sendbuf)+1 , 0) < 0) {
-        perror("Send()");
-        exit(7);
-    }
-
-	  //unlockMutex();
+    sendData(newSocket, sendbuf);
+		//-----------------------FIM CADASTRO--------------------------//
 	}
 }
 
@@ -99,23 +109,20 @@ char **argv;
   unsigned short port;
   char sendbuf[12];
   char recvbuf[12];
-  struct sockaddr_in client;
-  struct sockaddr_in server;
-  int s;					/* Socket para aceitar conexoes */
-  int ns;					/* Socket conectado ao cliente */
+  int s;						/* Socket para aceitar conexoes */
+  int ns;						/* Socket conectado ao cliente */
   int namelen;			/* tamanho do nome */
 	int threads = 0;
-	Arguments *params;
-	pthread_t tid;
 	int indexMain = 0;
+	pthread_t tid;
+	struct sockaddr_in client;
+	struct sockaddr_in server;
+	Arguments *params;
 
 	// Inicia mutex
 	inicializaMutex();
 
-  /*
-   * O primeiro argumento (argv[1]) eh a porta
-   * onde o servidor aguardara por conexoes
-   */
+ 	// argv[1] = Porta em que ficará aguardando conexões
   if (argc != 2) {
       fprintf(stderr, "Use: %s porta\n", argv[0]);
       exit(1);
@@ -123,44 +130,31 @@ char **argv;
 
   port = (unsigned short) atoi(argv[1]);
 
-  /*
-   * Cria um socket TCP (stream) para aguardar conexoes
-   */
+  // Cria um socket TCP (stream) para aguardar conexoes
   if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
       perror("Socket()");
       exit(2);
   }
 
- /*
-  * Define a qual endere�o IP e porta o servidor estara ligado.
-  * IP = INADDDR_ANY -> faz com que o servidor se ligue em todos
-  * os enderecos IP
-  */
+
+  // Atribui a porta desejada
   server.sin_family = AF_INET;
   server.sin_port   = htons(port);
   server.sin_addr.s_addr = INADDR_ANY;
 
-  /*
-   * Liga o servidor à porta definida anteriormente.
-   */
+  // Relaciona a porta desejada com o socket
   if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0) {
      perror("Bind()");
      exit(3);
   }
 
-  /*
-   * Prepara o socket para aguardar por conexoes e
-   * cria uma fila de conexoes pendentes.
-   */
+  // Começa a esperar alguma conexão na porta atrelada
   if (listen(s, 1) != 0) {
       perror("Listen()");
       exit(4);
   }
 
-  /*
-   * Aceita uma conexao e cria um novo socket atraves do qual
-   * ocorrera a comunicacao com o cliente.
-   */
+  // Aceita a conexão que for requisitada
   namelen = sizeof(client);
 
 	while(1){
@@ -170,19 +164,17 @@ char **argv;
     }
 
 		// Popula os valores da variavel de argumentos
-		params 		= (Arguments *)malloc(sizeof(Arguments));
+		params 					= (Arguments *)malloc(sizeof(Arguments));
 		params->index 	= indexMain++;
-		params->ns 	= ns;
+		params->ns 			= ns;
 		params->client 	= client;
 		params->server 	= server;
-		params->addr 	= (pthread_t *) malloc(sizeof(pthread_t));
+		params->addr 		= (pthread_t *) malloc(sizeof(pthread_t));
 
 		// Criacao da thread
 		pthread_create(params->addr, NULL, &response, (void *)params);
 		pthread_detach(*params->addr);
 	}
-
-
 
   /* Fecha o socket aguardando por conexoes */
   close(s);

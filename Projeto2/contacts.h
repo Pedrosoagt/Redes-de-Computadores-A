@@ -7,7 +7,7 @@
 //estrutura de usuário
 struct contact_t {
   char num[16]; // numero de contato
-  struct sockaddr_in *local; //Ip + Porta
+  struct sockaddr_in local; //Ip + Porta
 };
 
 //Lista de usuário
@@ -24,5 +24,6 @@ bool createContact(ContactCollection **, Contact);
 ContactCollection* findContact(ContactCollection *, char *);
 bool updateContact(ContactCollection **, Contact);
 void printContacts(ContactCollection *);
+bool removeContact(ContactCollection **, Contact);
 
 #endif
