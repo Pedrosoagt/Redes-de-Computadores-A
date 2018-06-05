@@ -9,6 +9,15 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#define BUFF_SIZE 16
+
+
+void printMenu(){
+  puts("Selecione uma das opções a seguir:");
+  puts("1 - Consultar número;");
+  puts("2 - Conectar a um número;");
+}
+
 int main(argc, argv)
 int argc;
 char **argv;
@@ -17,8 +26,11 @@ char **argv;
   struct hostent *hostnm;
   struct sockaddr_in server;
   int s;
-	int type_clt = 0;
   float status = -1;
+  char ans;
+  char sendbuf[BUFF_SIZE];
+  char rcvbuf[BUFF_SIZE];
+
 
   /*
 	 * O primeiro argumento (argv[1]) � o hostname do servidor.
@@ -61,19 +73,33 @@ char **argv;
  		exit(4);
  	}
 
-  printf("Digite Uma temperatura\n");
-  scanf("%f", &temperatura);
+  do {
 
-  /*----------------Envio-----------------------------*/
-  if (send(s, &temperatura, sizeof(float), 0)) {
+    puts("Para papear, logue já!");
+    printf("Digite seu número de tefelone:\n");
+    __fpurge(stdin);
+    fgets(sendbuf, BUFF_SIZE, stdin);
+
+    printf("O número digitado foi: %s.\nVc tem certeza desse número?");
+    getchar(ans);
+
+  } while(strcmp(ans, 'n') || strcmp(ans, 'N'));
+
+  if (send(s, sendbuf, BUFF_SIZE, 0)) {
     perror("Send()");
     exit(5);
   }
 
-  if (recv(s, &temperatura, sizeof(temperatura), 0) < 0) {
+  if (recv(s, rcvbuf, BUFF_SIZE, 0) < 0) {
     perror("Recv()");
     exit(6);
   }
+
+  if(strcmp(rcvbuf, "Success") == 0){
+
+  }
+
+
 
   printf("Temperatura ar condicionado: %.2f", temperatura);
 
