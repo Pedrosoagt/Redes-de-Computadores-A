@@ -5,17 +5,105 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <stdio_ext.h>
+#include <pthread.h>
+#include <string.h>
 
 #define BUFF_SIZE 16
 
 
+// Structs
+typedef struct {
+	pthread_t *addr;
+	int ns;
+	struct sockaddr_in client;
+	struct sockaddr_in server;
+	int index;
+} Arguments;
+
+
+void *threadClient(void *args){
+  printf("Precisa mudar");
+}
+
+bool write_file(char type, char  *stringNum) {
+
+    FILE *fp;
+    fp = fopen("contatos.txt","a+");
+
+    if( fp )
+      fprintf(fp, "%c - %s\n", type, stringNum);
+    else
+      return false;
+
+    printf("O que foi escrito: %c , %s\n", type, stringNum);
+    fclose(fp);
+
+    return true;
+}
+
+char * read_file(){
+  FILE *fp;
+  char *ans = NULL;
+  char *line = NULL;
+  size_t len = 0;
+
+  // Aparentemente o endereço de ans quando inicializada
+  //  como vetor fica mudando, então fiz por alocação
+  // dinâmica mesmo.
+  ans = (char *) malloc(1024);
+
+  fp = fopen("contatos.txt", "r");
+
+  if(fp)
+    while ((getline(&line, &len, fp)) != EOF)
+      strcat(ans, line);
+
+  fclose(fp);
+
+  return ans;
+}
+
 void printMenu(){
   puts("Selecione uma das opções a seguir:");
-  puts("1 - Consultar número;");
-  puts("2 - Conectar a um número;");
+  puts("1 - Conectar a um número;");
+  puts("2 - Conectar a um grupo;");
+  puts("3 - Sair");
+}
+
+sockaddr_in requestLocal(int newSocket, char *sendbuf){
+
+  sockaddr_in aux;
+
+  // Envia ao server o número que o user quer conectar
+  send(newSocket, sendbuf, BUFF_SIZE, 0);
+
+  recv(newSocket, &aux, BUFF_SIZE, 0);
+
+  return aux;
+}
+
+void connectClient(int newSocket, char *sendbuf){
+
+  Arguments *params = NULL;
+
+  sockaddr_in user = requestLocal(newSocket, sendbuf);
+
+  params = (Arguments *) malloc(sizeof(Arguments));
+  params->addr = (pthread_t *) malloc(sizeof(pthread_t));
+  params->client = user;
+  params->ns = 0;
+  params->index = 0;
+
+  pthread_create(params->addr, NULL, &threadClient, (void *)params);
+  pthread_detach(*params->addr);
+}
+
+bool sendMessage(){
+
 }
 
 int main(argc, argv)
@@ -97,11 +185,21 @@ char **argv;
 
   if(strcmp(rcvbuf, "Success") == 0){
 
+    int option;
+    printMenu();
+    scanf(" %i", &option);
+
+    switch(option){
+      case 1:
+        // Conecta em um número
+        puts("Digite o número que quer conectar");
+        scanf(" %s", sendbuf);
+
+    }
   }
 
 
 
-  printf("Temperatura ar condicionado: %.2f", temperatura);
 
 	printf("Cliente terminou com sucesso.\n");
 }
