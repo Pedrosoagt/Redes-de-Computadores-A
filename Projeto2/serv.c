@@ -69,7 +69,6 @@ int signup(Arguments *aux, char rcvbuf[]){
 		unlockMutex();	// Prevencao de dados inconsistentes
 		return false;
 	}
-
 }
 
 void *response(void *args){

@@ -28,7 +28,7 @@ typedef struct node_t {
 } Node;
 
 void *threadClient(void *args) {
-	puts("Thread do cliente aberta para chat");
+	system("deepin-terminal ./client 127.0.0.1 5000");
 }
 
 bool write_file(char type, char  *stringNum) {
@@ -178,6 +178,7 @@ char **argv;
 
     printf("O número digitado foi: %s.\nVc tem certeza desse número? (S/n) ", sendbuf);
     ans = getchar();
+		sendbuf[3] = '\0';
 
   } while(ans == 'n' || ans == 'N');
 
