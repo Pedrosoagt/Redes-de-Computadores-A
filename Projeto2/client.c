@@ -14,7 +14,6 @@
 
 #define BUFF_SIZE 16
 
-
 // Structs
 typedef struct {
 	pthread_t *addr;
@@ -24,8 +23,11 @@ typedef struct {
 	int index;
 } Arguments;
 
+typedef struct node_t {
+	struct node_t *next;
+} Node;
 
-void *threadClient(void *args){
+void *threadClient(void *args) {
   printf("Precisa mudar");
 }
 
@@ -35,17 +37,18 @@ bool write_file(char type, char  *stringNum) {
     fp = fopen("contatos.txt","a+");
 
     if( fp )
-      fprintf(fp, "%c - %s\n", type, stringNum);
+      fprintf(fp, "%c-%s\n", type, stringNum);
     else
       return false;
 
-    printf("O que foi escrito: %c , %s\n", type, stringNum);
+    printf("O que foi escrito: %c-%s\n", type, stringNum);
     fclose(fp);
 
     return true;
 }
 
-char * read_file(){
+char * read_file() {
+
   FILE *fp;
   char *ans = NULL;
   char *line = NULL;
@@ -58,7 +61,7 @@ char * read_file(){
 
   fp = fopen("contatos.txt", "r");
 
-  if(fp)
+  if (fp)
     while ((getline(&line, &len, fp)) != EOF)
       strcat(ans, line);
 
@@ -74,9 +77,9 @@ void printMenu(){
   puts("3 - Sair");
 }
 
-sockaddr_in requestLocal(int newSocket, char *sendbuf){
+struct sockaddr_in requestLocal(int newSocket, char *sendbuf){
 
-  sockaddr_in aux;
+  struct sockaddr_in aux;
 
   // Envia ao server o número que o user quer conectar
   send(newSocket, sendbuf, BUFF_SIZE, 0);
@@ -90,7 +93,7 @@ void connectClient(int newSocket, char *sendbuf){
 
   Arguments *params = NULL;
 
-  sockaddr_in user = requestLocal(newSocket, sendbuf);
+  struct sockaddr_in user = requestLocal(newSocket, sendbuf);
 
   params = (Arguments *) malloc(sizeof(Arguments));
   params->addr = (pthread_t *) malloc(sizeof(pthread_t));
@@ -102,9 +105,7 @@ void connectClient(int newSocket, char *sendbuf){
   pthread_detach(*params->addr);
 }
 
-bool sendMessage(){
-
-}
+bool sendMessage(){}
 
 int main(argc, argv)
 int argc;
@@ -118,7 +119,6 @@ char **argv;
   char ans;
   char sendbuf[BUFF_SIZE];
   char rcvbuf[BUFF_SIZE];
-
 
   /*
 	 * O primeiro argumento (argv[1]) � o hostname do servidor.
@@ -168,21 +168,24 @@ char **argv;
     __fpurge(stdin);
     fgets(sendbuf, BUFF_SIZE, stdin);
 
-    printf("O número digitado foi: %s.\nVc tem certeza desse número?");
-    getchar(ans);
+    printf("O número digitado foi: %s.\nVc tem certeza desse número?", sendbuf);
+    ans = getchar();
 
-  } while(strcmp(ans, 'n') || strcmp(ans, 'N'));
+  } while(ans == 'n' || ans == 'N');
 
+	// Envia o número para o cadastro
   if (send(s, sendbuf, BUFF_SIZE, 0)) {
     perror("Send()");
     exit(5);
   }
 
+	// Recebe feedback de cadastro
   if (recv(s, rcvbuf, BUFF_SIZE, 0) < 0) {
     perror("Recv()");
     exit(6);
   }
 
+	// Exibe menu
   if(strcmp(rcvbuf, "Success") == 0){
 
     int option;
@@ -194,12 +197,9 @@ char **argv;
         // Conecta em um número
         puts("Digite o número que quer conectar");
         scanf(" %s", sendbuf);
-
+				connectClient(s, sendbuf);
     }
   }
-
-
-
 
 	printf("Cliente terminou com sucesso.\n");
 }

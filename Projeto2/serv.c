@@ -25,9 +25,6 @@ typedef struct {
 ContactCollection *contactList = NULL;
 
 
-
-
-
 // Aux functions
 
 pthread_mutex_t mutex;
@@ -53,15 +50,30 @@ void sendData(int ns, char *data) {
 	send(ns, data, sizeof(typeof(*data)), 0);
 }
 
+// Cadastra um novo usuário; True para sucesso, False para falha
+int signup(Arguments *aux, char rcvbuf[]){
+
+	// Na primeira vez, todos os clientes devem se identificar para o cadastro inicial
+	Contact newContact;
+	newContact.local = aux->client;
+	strcpy(newContact.num, rcvbuf);
+
+	lockMutex();		// Prevencao de dados inconsistentes
+
+	// Insere o novo contato na lista de contatos
+	if(createContact(&contactList, newContact)) return true;
+	else return false;
+
+	unlockMutex();	// Prevencao de dados inconsistentes
+}
+
 void *response(void *args){
 
 	Arguments *aux = NULL;
 	int newSocket;
-	int fin = 0;
+	bool fin = false;
   char sendbuf[BUFF_SIZE];
   char rcvbuf[BUFF_SIZE];
-
-
 
 	// Atribuicoes
 	aux = (Arguments *) args; 	/* Resgatando informacoes dos parametros */
@@ -69,33 +81,38 @@ void *response(void *args){
 	newSocket = aux->ns;
 	printf("Conexão feita IP: %i Porta: %i\n", aux->client.sin_addr, ntohs(aux->server.sin_port));
 
-	while(1) {
-    /* Recebe uma mensagem do cliente atraves do novo socket conectado */
-    if (recv(newSocket, &rcvbuf, BUFF_SIZE, 0) == -1) {
-        perror("Recv()");
-        exit(6);
-    }
+	/* Recebe uma mensagem do cliente atraves do novo socket conectado */
+	if (recv(newSocket, &rcvbuf, BUFF_SIZE, 0) == -1) {
+	    perror("Recv()");
+	    exit(6);
+	}
 
-		printf("Cliente(%i)\n", aux->index);
-
-		//-------------------------CADASTRO----------------------------//
-		// Na primeira vez, todos os clientes devem se identificar para o cadastro inicial
-		Contact newContact;
-		newContact.local = aux->client;
-		strcpy(newContact.num, rcvbuf);
-
-		lockMutex();		// Prevencao de dados inconsistentes
-
-		// Insere o novo contato na lista de contatos
-		if(createContact(&contactList, newContact)) strcpy(sendbuf, "Success");
+	// Se o usuário já está cadastrado, reconhece
+	if( findContact(contactList, rcvbuf) )
+		strcpy(sendbuf, "Welcome back!");
+	else	// Se não, cadastra
+		if( signup(aux, rcvbuf) ) strcpy(sendbuf, "Success");
 		else strcpy(sendbuf, "Failed");
 
-		unlockMutex();	// Prevencao de dados inconsistentes
+	// Envia uma mensagem ao cliente atraves do socket conectado
+	sendData(newSocket, sendbuf);
 
-    /* Envia uma mensagem ao cliente atraves do socket conectado */
-    sendData(newSocket, sendbuf);
-		//-----------------------FIM CADASTRO--------------------------//
+	while(!fin){
+		recv(newSocket, &rcvbuf, BUFF_SIZE, 0);
+
+		if(strcmp(rcvbuf, "Shutdown") == 0){
+			fin = true;
+			shutdown(newSocket, SHUT_RDWR);
+			break;
+		} else {
+			ContactCollection *aux = findContact(contactList, rcvbuf);
+			aux ? strcpy(sendbuf, aux->info.num) : strcpy(sendbuf, "User offline");
+		}
+
+		sendData(newSocket, sendbuf);
 	}
+
+	pthread_exit(0);
 }
 
 
