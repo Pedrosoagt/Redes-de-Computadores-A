@@ -10,7 +10,7 @@
 #include "contacts.h"
 
 // Constantes
-#define BUFF_SIZE 16
+#define BUFF_SIZE 128
 
 // Structs
 typedef struct {
@@ -47,7 +47,7 @@ void unlockMutex() {
 
 // Envia dados pela função send
 void sendData(int ns, char *data) {
-	send(ns, data, sizeof(typeof(*data)), 0);
+	send(ns, data, BUFF_SIZE, 0);
 }
 
 // Cadastra um novo usuário; True para sucesso, False para falha
@@ -61,10 +61,15 @@ int signup(Arguments *aux, char rcvbuf[]){
 	lockMutex();		// Prevencao de dados inconsistentes
 
 	// Insere o novo contato na lista de contatos
-	if(createContact(&contactList, newContact)) return true;
-	else return false;
+	if(createContact(&contactList, newContact)) {
+		unlockMutex();	// Prevencao de dados inconsistentes
+		return true;
+	}
+	else {
+		unlockMutex();	// Prevencao de dados inconsistentes
+		return false;
+	}
 
-	unlockMutex();	// Prevencao de dados inconsistentes
 }
 
 void *response(void *args){
@@ -96,22 +101,28 @@ void *response(void *args){
 
 	// Envia uma mensagem ao cliente atraves do socket conectado
 	sendData(newSocket, sendbuf);
+	printf("Dado enviado: %s\n", sendbuf);
 
-	while(!fin){
+
+	puts("----------------- PRINT LISTA -------------------");
+	printContacts(contactList);
+	puts("-------------- FINAL PRINT LISTA -----------------");
+
+	while(strcmp(rcvbuf, "Shutdown") != 0){
 		recv(newSocket, &rcvbuf, BUFF_SIZE, 0);
+		printf("Dado recebido: %s\n", rcvbuf);
 
-		if(strcmp(rcvbuf, "Shutdown") == 0){
-			fin = true;
-			shutdown(newSocket, SHUT_RDWR);
-			break;
-		} else {
-			ContactCollection *aux = findContact(contactList, rcvbuf);
-			aux ? strcpy(sendbuf, aux->info.num) : strcpy(sendbuf, "User offline");
-		}
+		puts("PASSOU NO ELSE DO SHUTDOWN");
+		ContactCollection *aux = NULL;
+		printf("rcvbuf do else do shutdown: %s\n", rcvbuf);
+		aux = findContact(contactList, rcvbuf);
+		printf("Valor de aux: %i\n", aux);
+		aux ? strcpy(sendbuf, aux->info.num) : strcpy(sendbuf, "User offline");
 
 		sendData(newSocket, sendbuf);
 	}
 
+	shutdown(newSocket, SHUT_RDWR);
 	pthread_exit(0);
 }
 

@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <string.h>
 
-#define BUFF_SIZE 16
+#define BUFF_SIZE 128
 
 // Structs
 typedef struct {
@@ -28,7 +28,7 @@ typedef struct node_t {
 } Node;
 
 void *threadClient(void *args) {
-  printf("Precisa mudar");
+	puts("Thread do cliente aberta para chat");
 }
 
 bool write_file(char type, char  *stringNum) {
@@ -77,32 +77,40 @@ void printMenu(){
   puts("3 - Sair");
 }
 
-struct sockaddr_in requestLocal(int newSocket, char *sendbuf){
+bool requestLocal(int newSocket, char *sendbuf){
 
-  struct sockaddr_in aux;
+  char aux[BUFF_SIZE];
 
   // Envia ao server o número que o user quer conectar
   send(newSocket, sendbuf, BUFF_SIZE, 0);
+	printf("Enviou ao servidor o requestLocal: %s\n", sendbuf);
 
   recv(newSocket, &aux, BUFF_SIZE, 0);
 
-  return aux;
+	printf("Recebeu do servidor no requestLocal: %s\n", aux);
+
+	if(strcmp(aux, "User offline") != 0) return true;
+	else return false;
 }
 
 void connectClient(int newSocket, char *sendbuf){
 
   Arguments *params = NULL;
 
-  struct sockaddr_in user = requestLocal(newSocket, sendbuf);
+  struct sockaddr_in user;
+	if(	requestLocal(newSocket, sendbuf) ){
 
-  params = (Arguments *) malloc(sizeof(Arguments));
-  params->addr = (pthread_t *) malloc(sizeof(pthread_t));
-  params->client = user;
-  params->ns = 0;
-  params->index = 0;
+	  params = (Arguments *) malloc(sizeof(Arguments));
+	  params->addr = (pthread_t *) malloc(sizeof(pthread_t));
+	  params->client = user;
+	  params->ns = 0;
+	  params->index = 0;
 
-  pthread_create(params->addr, NULL, &threadClient, (void *)params);
-  pthread_detach(*params->addr);
+	  pthread_create(params->addr, NULL, &threadClient, (void *)params);
+	  pthread_detach(*params->addr);
+	}
+	else
+		puts("O usuário está offline no momento.");
 }
 
 bool sendMessage(){}
@@ -168,13 +176,13 @@ char **argv;
     __fpurge(stdin);
     fgets(sendbuf, BUFF_SIZE, stdin);
 
-    printf("O número digitado foi: %s.\nVc tem certeza desse número?", sendbuf);
+    printf("O número digitado foi: %s.\nVc tem certeza desse número? (S/n) ", sendbuf);
     ans = getchar();
 
   } while(ans == 'n' || ans == 'N');
 
 	// Envia o número para o cadastro
-  if (send(s, sendbuf, BUFF_SIZE, 0)) {
+  if (send(s, sendbuf, BUFF_SIZE, 0) < 0) {
     perror("Send()");
     exit(5);
   }
@@ -186,20 +194,29 @@ char **argv;
   }
 
 	// Exibe menu
-  if(strcmp(rcvbuf, "Success") == 0){
+	int option;
+	if(strcmp(rcvbuf, "Success") == 0){
+		while(strcmp(rcvbuf, "Shutdown") != 0) {
 
-    int option;
-    printMenu();
-    scanf(" %i", &option);
+			printMenu();
+	    scanf(" %i", &option);
 
-    switch(option){
-      case 1:
-        // Conecta em um número
-        puts("Digite o número que quer conectar");
-        scanf(" %s", sendbuf);
-				connectClient(s, sendbuf);
-    }
-  }
+	    switch(option){
+	      case 1:
+	        // Conecta em um número
+	        puts("Digite o número que quer conectar:");
+	        scanf(" %s", sendbuf);
+					connectClient(s, sendbuf);
+
+					break;
+				case 3:
+					strcpy(sendbuf, "Shutdown");
+					send(s, sendbuf, BUFF_SIZE, 0);
+					recv(s, &rcvbuf, BUFF_SIZE, 0);
+					break;
+	    }
+		}
+	}
 
 	printf("Cliente terminou com sucesso.\n");
 }

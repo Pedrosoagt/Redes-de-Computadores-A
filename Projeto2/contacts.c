@@ -28,7 +28,7 @@ bool createContact(ContactCollection **pNode, Contact target){
 
     // Associa o novo espaço populado com a lista
     (*pNode) = aux;
-    puts("Contact created");
+    puts("Contact created.");
     return true;   // Retorna sucesso
   }
   else{
@@ -60,7 +60,7 @@ bool updateContact(ContactCollection **pNode, Contact target) {
 
 void printContacts(ContactCollection *list) {
   if(list) {
-    printf("Número de tel: %s\n", list->info.num);
+    printf("Número de tel: %s", list->info.num);
     printContacts(list->next);
   }
 }
