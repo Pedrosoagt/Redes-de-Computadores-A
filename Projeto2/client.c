@@ -28,7 +28,30 @@ typedef struct node_t {
 } Node;
 
 void *threadClient(void *args) {
-	system("deepin-terminal ./client 127.0.0.1 5000");
+
+	char distro[64], command[64];		// Strings q irão conter a distro e o comando
+	char ch;												// Caracter que será lido no popen
+	int i = 0;											// Iterador
+	strcpy(distro, "");							// Inicializa como string vazia
+
+	// Obtém a distro
+	FILE *fp = popen("cat /etc/issue", "r");
+	// Coleta apenas o nome da distro
+	while( (ch = fgetc(fp)) != ' ') distro[i++] = ch;
+	// Fecha o ponteiro
+	pclose(fp);
+
+	printf("Distro: %s\n", distro);
+
+	// Invoca o terminal correto de acordo com a distro
+	if(!strcmp(distro, "Deepin"))
+		strcpy(command, "deepin-terminal -e ./client 127.0.0.1 5000");
+	else if(!strcmp(distro, "Kubuntu"))
+		strcpy(command, "konsole -e ./client 127.0.0.1 5000");
+	else if(!strcmp(distro, "Ubuntu"))
+		strcpy(command, "gnome-terminal -e ./client 127.0.0.1 5000");
+
+	system(command);
 }
 
 bool write_file(char type, char  *stringNum) {
