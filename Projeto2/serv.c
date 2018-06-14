@@ -31,7 +31,6 @@ typedef struct {
   int ns;
   struct sockaddr_in client;
   struct sockaddr_in server;
-  int index;
 } Arguments;
 
 struct client_data{
@@ -157,7 +156,6 @@ int main(int argc, char **argv) {
   unsigned short port;
   int s;                      /* Socket para aceitar conexoes */
   int ns;                     /* Socket conectado ao cliente */
-  int indexMain = 0;
   Arguments *params;
 	socklen_t namelen;                /* tamanho do nome */
   struct sockaddr_in client;
@@ -209,7 +207,6 @@ int main(int argc, char **argv) {
 
     // Popula os valores da variavel de argumentos
     params           = (Arguments *)malloc(sizeof(Arguments));
-    params->index    = indexMain++;
     params->ns       = ns;
     params->client   = client;
     params->server   = server;
