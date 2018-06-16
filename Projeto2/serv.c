@@ -25,6 +25,7 @@
 // Constantes
 #define BUFF_SIZE 128
 
+
 // Structs
 typedef struct {
   pthread_t *addr;
@@ -104,7 +105,12 @@ void *response(void *args){
   char sendbuf[BUFF_SIZE];
   char num[BUFF_SIZE];
   struct client_data msg;
+  struct sockaddr_in nullClient;
 
+  // Atribui a porta desejada
+  nullClient.sin_family = AF_INET;
+  nullClient.sin_port   = htons(0);
+  nullClient.sin_addr.s_addr = 0;
 
   // Atribuicoes
   aux_params = (Arguments *) args;   /* Resgatando informacoes dos parametros */
@@ -141,7 +147,7 @@ void *response(void *args){
     printf("Dado recebido: %s\n", num);
 
     ContactCollection *contact = findContact(contactList, num);
-    contact ? sendSckAddr(newSocket, &contact->info.local) : sendString(newSocket, "User offline");
+    contact ? sendSckAddr(newSocket, &contact->info.local) : sendSckAddr(newSocket, &nullClient);
   }
 
   shutdown(newSocket, SHUT_RDWR);
