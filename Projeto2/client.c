@@ -28,8 +28,7 @@ typedef struct {
   struct sockaddr_in client;
 } Arguments;
 
-struct client_data {
-  char name[NAME_SIZE];
+struct client_data {  char name[NAME_SIZE];
   char num[PHONE_SIZE];
 };
 
@@ -148,6 +147,38 @@ void printMenu() {
   puts("3 - Sair");
 }
 
+void outterConnection(){
+
+  int mainSocket, outterSocket;
+  socklen_t clientLen;
+  Arguments *params;
+  struct sockaddr_in thisClient, outterClient;
+
+  sleep(2);
+  // Define o endereço IP e a porta do servidor
+  outterClient.sin_family      = AF_INET;
+  outterClient.sin_port        = htons(INADDR_ANY);
+  outterClient.sin_addr.s_addr = INADDR_ANY;
+
+  mainSocket = socket(PF_INET, SOCK_STREAM, 0);
+  bind(mainSocket, (struct sockaddr *) &thisClient, sizeof(thisClient));
+  listen(mainSocket, 1);
+  clientLen = sizeof(outterClient);
+  // Aceitando conexões externas
+  if ( (outterSocket = accept(mainSocket, (struct sockaddr *)&outterClient, &clientLen)) == -1) {
+    perror("Accept()");
+    exit(5);
+  }
+
+  params = (Arguments *) malloc(sizeof(Arguments));
+  params->addr = (pthread_t *) malloc(sizeof(pthread_t));
+  params->client = outterClient;
+  params->ns = outterSocket;
+
+  pthread_create(params->addr, NULL, &threadClient, (void *)params);
+  pthread_detach(*params->addr);
+}
+
 struct sockaddr_in *requestLocal(int newSocket, char *sendbuf) {
 
   struct sockaddr_in *client;
@@ -167,6 +198,7 @@ void connectClient(int newSocket, char *sendbuf) {
   int outterSocket;
   Arguments *params = NULL;
   struct sockaddr_in *user;
+
 
   printf("Cheguei até aqui connectClient\n");
   if(  (user = requestLocal(newSocket, sendbuf)) != 0 ) {
@@ -264,10 +296,9 @@ void *connectionServer(void *args) {
 
 int main(int argc, char **argv) {
 
-  int s, outterSocket;
+  int s;
   struct hostent *hostnm;
   struct sockaddr_in server;
-  struct sockaddr_in outterClient;
 
 
   // O primeiro argumento (argv[1]) é o hostname do servidor.
@@ -310,46 +341,8 @@ int main(int argc, char **argv) {
   pthread_create(params->addr, NULL, &connectionServer, (void *)params);
   pthread_detach(*params->addr);
 
-  // Define o endereço IP e a porta do servidor
-  outterClient.sin_family      = AF_INET;
-  outterClient.sin_port        = htons(INADDR_ANY);
-  outterClient.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
-
-  // Cria um socket TCP (stream)
-  if ((outterSocket = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("Socket()");
-    exit(3);
-  }
-
-  // Relaciona a porta desejada com o socket
-  if (bind(outterSocket, (struct sockaddr *) &outterClient, sizeof(outterClient) ) < 0) {
-    perror("Bind()");
-    exit(3);
-  }
-
-  // Começa a esperar alguma conexão na porta atrelada
-  if (listen(outterSocket, 1) != 0) {
-      perror("Listen()");
-      exit(4);
-  }
-
   while(1){
-    // Estabelece conexão com o servidor
-    printf("Cheguei até aqui1 %d\n", outterSocket);
-    sleep(5);
-    if (connect(outterSocket, (struct sockaddr *) &outterClient, sizeof(outterClient)) < 0) {
-       perror("Connect()");
-       exit(4);
-    }
-
-    params = (Arguments *) malloc(sizeof(Arguments));
-    params->addr = (pthread_t *) malloc(sizeof(pthread_t));
-    params->client = outterClient;
-    params->ns = outterSocket;
-
-    pthread_create(params->addr, NULL, &threadClient, (void *)params);
-    pthread_detach(*params->addr);
-
+    outterConnection();
   }
 
   printf("Cliente terminou com sucesso.\n");
