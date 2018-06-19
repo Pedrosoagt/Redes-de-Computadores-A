@@ -24,7 +24,8 @@
 
 // Constantes
 #define BUFF_SIZE 128
-
+#define PHONE_SIZE 11
+#define NAME_SIZE 54
 
 // Structs
 typedef struct {
@@ -35,8 +36,8 @@ typedef struct {
 } Arguments;
 
 struct client_data{
-  char *name;
-  char *num;
+  char name[NAME_SIZE];
+  char num[PHONE_SIZE];
 };
 
 

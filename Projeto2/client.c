@@ -29,8 +29,8 @@ typedef struct {
 } Arguments;
 
 struct client_data {
-  char *name;
-  char *num;
+  char name[NAME_SIZE];
+  char num[PHONE_SIZE];
 };
 
 // Funções auxiliares
@@ -168,7 +168,7 @@ void connectClient(int newSocket, char *sendbuf) {
   Arguments *params = NULL;
   struct sockaddr_in *user;
 
-
+  printf("Cheguei até aqui connectClient\n");
   if(  (user = requestLocal(newSocket, sendbuf)) != 0 ) {
 
     // Cria um socket TCP
@@ -178,6 +178,7 @@ void connectClient(int newSocket, char *sendbuf) {
     }
 
     // Conexão com cliente de fora
+    printf("ConnectClient: %d\n", outterSocket);
     connect(outterSocket, (struct sockaddr *)&user, sizeof(user));
 
     params = (Arguments *) malloc(sizeof(Arguments));
@@ -200,7 +201,7 @@ void *connectionServer(void *args) {
   struct client_data msg;
 
   params = (Arguments *) args;
-
+  printf("Cheguei até aqui connectServer\n");
   do {
 
     puts("Para papear, logue já!");
@@ -217,22 +218,22 @@ void *connectionServer(void *args) {
     choppy(num);
 
   } while(ans == 'n' || ans == 'N');
-
+  printf("oi1\n");
   strcpy(msg.name, name);
   strcpy(msg.num, num);
-
+  printf("oi2\n");
   // Envia o número para o cadastro
   if ( send(params->ns, &msg, sizeof(msg), 0) < 0 ) {
     perror("Send()");
     exit(5);
   }
-
+  printf("oi3\n");
   // Recebe feedback de cadastro
   if (recv(params->ns, rcvbuf, BUFF_SIZE, 0) < 0) {
     perror("Recv()");
     exit(6);
   }
-
+  printf("oi4\n");
   // Exibe menu
   int option;
   if(strcmp(rcvbuf, "Success") == 0) {
@@ -294,6 +295,7 @@ int main(int argc, char **argv) {
   }
 
   // Estabelece conexão com o servidor
+  printf("Server: %d\n", s);
   if (connect(s, (struct sockaddr *) &server, sizeof(server)) < 0) {
      perror("Connect()");
      exit(4);
@@ -307,7 +309,6 @@ int main(int argc, char **argv) {
 
   pthread_create(params->addr, NULL, &connectionServer, (void *)params);
   pthread_detach(*params->addr);
-
 
   // Define o endereço IP e a porta do servidor
   outterClient.sin_family      = AF_INET;
@@ -334,6 +335,8 @@ int main(int argc, char **argv) {
 
   while(1){
     // Estabelece conexão com o servidor
+    printf("Cheguei até aqui1 %d\n", outterSocket);
+    sleep(5);
     if (connect(outterSocket, (struct sockaddr *) &outterClient, sizeof(outterClient)) < 0) {
        perror("Connect()");
        exit(4);
