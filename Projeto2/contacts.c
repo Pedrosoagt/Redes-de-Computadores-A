@@ -38,11 +38,11 @@ bool createContact(ContactCollection **pNode, Contact target){
 }
 
 //função de busca na lista
-ContactCollection * findContact(ContactCollection *node, char target[]) {
+ContactCollection *findContact(ContactCollection *node, char target[]) {
 
   puts("Searching contact...");
 
-  if(!node) return 0;
+  if(!node) return (ContactCollection *) 0;
   if(strcmp(node->info.num, target) == 0) return node;
   return findContact(node->next, target);
 }
@@ -60,7 +60,7 @@ bool updateContact(ContactCollection **pNode, Contact target) {
 
 void printContacts(ContactCollection *list) {
   if(list) {
-    printf("Número de tel: %s", list->info.num);
+    printf("Número de tel: %s\n", list->info.num);
     printContacts(list->next);
   }
 }

@@ -28,7 +28,8 @@ typedef struct {
   struct sockaddr_in client;
 } Arguments;
 
-struct client_data {  char name[NAME_SIZE];
+struct client_data {
+  char name[NAME_SIZE];
   char num[PHONE_SIZE];
 };
 
@@ -52,24 +53,26 @@ void getDistro(char distro[]) {
   pclose(fp);
 }
 
-void invokeTerminal(char *distro, char *termArgs) {
+void invokeTerminal(char distro[], char *termArgs) {
 
   char command[DISTRO_NAME_SIZE];
 
   // Invoca o terminal correto de acordo com a distro
-  if(!strcmp(distro, "Deepin"))
-    strcpy(command, "deepin-terminal -e ");
-
-  else if(!strcmp(distro, "Kubuntu"))
-    strcpy(command, "konsole -e ");
-
-  else if(!strcmp(distro, "Ubuntu"))
-    strcpy(command, "gnome-terminal -e ");
-
-  else puts("Sistema nao suportado.");
+  // if(!strcmp(distro, "Deepin"))
+  //   strcpy(command, "deepin-terminal -e ");
+  //
+  // else if(!strcmp(distro, "Kubuntu"))
+  //   strcpy(command, "konsole -e ");
+  //
+  // else if(!strcmp(distro, "Ubuntu"))
+  //   strcpy(command, "gnome-terminal -e ");
+  //
+  // else puts("Sistema nao suportado.");
 
   // Concatena o programa que será executado com args
+  strcpy(command, "deepin-terminal -e ");
   strcat(command, termArgs);
+  printf("Comando a ser executado no terminal: %s\n", command);
 
   system(command);
 }
@@ -87,7 +90,7 @@ void *threadClient(void *args_connect) {
 
   printf("Distro: %s\n", distro);
 
-  snprintf(outterSocket, sizeof(int), "%d", params->ns);
+  snprintf(outterSocket, sizeof(int), "%i", params->ns);
 
   // Coleta dados do cliente
   strcpy(distro, "");              // Inicializa como string vazia
@@ -164,6 +167,7 @@ void outterConnection(){
   bind(mainSocket, (struct sockaddr *) &thisClient, sizeof(thisClient));
   listen(mainSocket, 1);
   clientLen = sizeof(outterClient);
+
   // Aceitando conexões externas
   if ( (outterSocket = accept(mainSocket, (struct sockaddr *)&outterClient, &clientLen)) == -1) {
     perror("Accept()");
@@ -179,9 +183,10 @@ void outterConnection(){
   pthread_detach(*params->addr);
 }
 
-struct sockaddr_in *requestLocal(int newSocket, char *sendbuf) {
+int requestLocal(int newSocket, char *sendbuf, struct sockaddr_in *user) {
 
-  struct sockaddr_in *client;
+  struct sockaddr_in client;
+
 
   // Envia ao server o número que o user quer conectar
   send(newSocket, sendbuf, BUFF_SIZE, 0);
@@ -189,7 +194,12 @@ struct sockaddr_in *requestLocal(int newSocket, char *sendbuf) {
 
   recv(newSocket, &client, BUFF_SIZE, 0);
 
-  if(ntohs(client->sin_port)) return client;
+  if(client.sin_port != 0) {
+    printf("IP: %s, Porta: %i", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+    *user = client;
+  }
+
+  if(client.sin_port != 0) return 1;
   else return 0;
 }
 
@@ -197,11 +207,11 @@ void connectClient(int newSocket, char *sendbuf) {
 
   int outterSocket;
   Arguments *params = NULL;
-  struct sockaddr_in *user;
+  struct sockaddr_in user;
 
 
   printf("Cheguei até aqui connectClient\n");
-  if(  (user = requestLocal(newSocket, sendbuf)) != 0 ) {
+  if(  requestLocal(newSocket, sendbuf, &user) != 0 ) {
 
     // Cria um socket TCP
     if ((outterSocket = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
@@ -215,7 +225,7 @@ void connectClient(int newSocket, char *sendbuf) {
 
     params = (Arguments *) malloc(sizeof(Arguments));
     params->addr = (pthread_t *) malloc(sizeof(pthread_t));
-    params->client = *user;
+    params->client = user;
     params->ns = outterSocket;
 
     pthread_create(params->addr, NULL, &threadClient, (void *)params);
@@ -250,22 +260,22 @@ void *connectionServer(void *args) {
     choppy(num);
 
   } while(ans == 'n' || ans == 'N');
-  printf("oi1\n");
+
   strcpy(msg.name, name);
   strcpy(msg.num, num);
-  printf("oi2\n");
+
   // Envia o número para o cadastro
   if ( send(params->ns, &msg, sizeof(msg), 0) < 0 ) {
     perror("Send()");
     exit(5);
   }
-  printf("oi3\n");
+
   // Recebe feedback de cadastro
   if (recv(params->ns, rcvbuf, BUFF_SIZE, 0) < 0) {
     perror("Recv()");
     exit(6);
   }
-  printf("oi4\n");
+
   // Exibe menu
   int option;
   if(strcmp(rcvbuf, "Success") == 0) {
@@ -279,6 +289,7 @@ void *connectionServer(void *args) {
           // Conecta em um número
           puts("Digite o número que quer conectar:");
           scanf(" %s", num);
+          printf("Número resgatado: %s\n", num);
           connectClient(params->ns, num);
 
           break;

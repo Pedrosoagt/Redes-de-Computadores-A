@@ -108,8 +108,7 @@ void *response(void *args){
   struct client_data msg;
   struct sockaddr_in nullClient;
 
-  // Atribui a porta desejada
-  nullClient.sin_family = AF_INET;
+  nullClient.sin_family = 0;
   nullClient.sin_port   = htons(0);
   nullClient.sin_addr.s_addr = 0;
 
@@ -148,6 +147,7 @@ void *response(void *args){
     printf("Dado recebido: %s\n", num);
 
     ContactCollection *contact = findContact(contactList, num);
+    contact ? puts("Existe contato!") : puts("Não existe contato!");
     contact ? sendSckAddr(newSocket, &contact->info.local) : sendSckAddr(newSocket, &nullClient);
   }
 
