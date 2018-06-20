@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include "contacts.h"
 
 
@@ -61,6 +62,9 @@ bool updateContact(ContactCollection **pNode, Contact target) {
 void printContacts(ContactCollection *list) {
   if(list) {
     printf("Número de tel: %s\n", list->info.num);
+    printf("IP: %s\n", inet_ntoa(list->info.local.sin_addr));
+    printf("Porta: %i\n", ntohs(list->info.local.sin_port));
+    puts("-------------");
     printContacts(list->next);
   }
 }

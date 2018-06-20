@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include "contacts.h"
 
 #define BUFF_SIZE 128
 #define PHONE_SIZE 11
@@ -53,25 +54,26 @@ void getDistro(char distro[]) {
   pclose(fp);
 }
 
-void invokeTerminal(char distro[], char *termArgs) {
+void invokeTerminal(char distro[], char *file, char *args) {
 
   char command[DISTRO_NAME_SIZE];
 
   // Invoca o terminal correto de acordo com a distro
-  // if(!strcmp(distro, "Deepin"))
-  //   strcpy(command, "deepin-terminal -e ");
-  //
-  // else if(!strcmp(distro, "Kubuntu"))
-  //   strcpy(command, "konsole -e ");
-  //
-  // else if(!strcmp(distro, "Ubuntu"))
-  //   strcpy(command, "gnome-terminal -e ");
-  //
-  // else puts("Sistema nao suportado.");
+  if(!strcmp(distro, "Deepin"))
+    strcpy(command, "deepin-terminal -x ");
+
+  else if(!strcmp(distro, "Kubuntu"))
+    strcpy(command, "konsole -x ");
+
+  else if(!strcmp(distro, "Ubuntu"))
+    strcpy(command, "gnome-terminal -x ");
+
+  else puts("Sistema nao suportado.");
 
   // Concatena o programa que será executado com args
-  strcpy(command, "deepin-terminal -e ");
-  strcat(command, termArgs);
+  strcat(command, file);
+  strcat(command, " -e ");
+  strcat(command, args);
   printf("Comando a ser executado no terminal: %s\n", command);
 
   system(command);
@@ -88,18 +90,14 @@ void *threadClient(void *args_connect) {
 
   getDistro(distro);
 
-  printf("Distro: %s\n", distro);
+  printf("Distribuição linux deste computador: %s\n", distro);
 
   snprintf(outterSocket, sizeof(int), "%i", params->ns);
 
   // Coleta dados do cliente
-  strcpy(distro, "");              // Inicializa como string vazia
-  strcpy(termArgs, "./chat ");      // Inicializa a string com o arquivo que será executado
-  strcat(termArgs, outterSocket);
+  strcpy(termArgs, "./chat");      // Inicializa a string com o arquivo que será executado
 
-  printf("termArgs: %s\n", termArgs);
-
-  invokeTerminal(distro, termArgs);
+  invokeTerminal(distro, termArgs, outterSocket);
 
   return 0;
 }
@@ -150,24 +148,15 @@ void printMenu() {
   puts("3 - Sair");
 }
 
-void outterConnection(){
+void outterConnection(int mainSocket){
 
-  int mainSocket, outterSocket;
+  int outterSocket;
   socklen_t clientLen;
   Arguments *params;
-  struct sockaddr_in thisClient, outterClient;
+  struct sockaddr_in outterClient;
 
-  sleep(2);
-  // Define o endereço IP e a porta do servidor
-  outterClient.sin_family      = AF_INET;
-  outterClient.sin_port        = htons(INADDR_ANY);
-  outterClient.sin_addr.s_addr = INADDR_ANY;
 
-  mainSocket = socket(PF_INET, SOCK_STREAM, 0);
-  bind(mainSocket, (struct sockaddr *) &thisClient, sizeof(thisClient));
-  listen(mainSocket, 1);
   clientLen = sizeof(outterClient);
-
   // Aceitando conexões externas
   if ( (outterSocket = accept(mainSocket, (struct sockaddr *)&outterClient, &clientLen)) == -1) {
     perror("Accept()");
@@ -239,8 +228,10 @@ void *connectionServer(void *args) {
 
   char num[PHONE_SIZE], name[NAME_SIZE], rcvbuf[BUFF_SIZE];
   char ans;
+  Contact myLocal;
   Arguments *params;
   struct client_data msg;
+
 
   params = (Arguments *) args;
   printf("Cheguei até aqui connectServer\n");
@@ -261,11 +252,12 @@ void *connectionServer(void *args) {
 
   } while(ans == 'n' || ans == 'N');
 
-  strcpy(msg.name, name);
-  strcpy(msg.num, num);
+  // strcpy(myLocal.name, name);
+  strcpy(myLocal.num, num);
+  myLocal.local = params->client;
 
   // Envia o número para o cadastro
-  if ( send(params->ns, &msg, sizeof(msg), 0) < 0 ) {
+  if ( send(params->ns, &myLocal, sizeof(msg), 0) < 0 ) {
     perror("Send()");
     exit(5);
   }
@@ -307,10 +299,21 @@ void *connectionServer(void *args) {
 
 int main(int argc, char **argv) {
 
-  int s;
+  int s, mainSocket;
   struct hostent *hostnm;
-  struct sockaddr_in server;
+  struct sockaddr_in server, thisClient;
 
+
+  // SERVIDOR DO CLIENTE----------------------------------
+  // Define o endereço IP e a porta do servidor
+  thisClient.sin_family      = AF_INET;
+  thisClient.sin_port        = htons(INADDR_ANY);
+  thisClient.sin_addr.s_addr = INADDR_ANY;
+
+  mainSocket = socket(PF_INET, SOCK_STREAM, 0);
+  bind(mainSocket, (struct sockaddr *) &thisClient, sizeof(thisClient));
+  listen(mainSocket, 1);
+  // FIM SERVIDOR DO CLIENTE------------------------------
 
   // O primeiro argumento (argv[1]) é o hostname do servidor.
   // O segundo argumento (argv[2]) é a porta do servidor.
@@ -346,14 +349,14 @@ int main(int argc, char **argv) {
   Arguments *params;
   params = (Arguments *) malloc(sizeof(Arguments));
   params->addr = (pthread_t *) malloc(sizeof(pthread_t));
-  params->client = server;
+  params->client = thisClient;
   params->ns = s;
 
   pthread_create(params->addr, NULL, &connectionServer, (void *)params);
   pthread_detach(*params->addr);
 
   while(1){
-    outterConnection();
+    outterConnection(mainSocket);
   }
 
   printf("Cliente terminou com sucesso.\n");

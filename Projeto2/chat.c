@@ -33,13 +33,13 @@ void printOptions(){
 
 int getCommand (char *msg) {
 
-  char command[5];
-  int i = 1;
+  char command[6];
 
 
-  while(msg[i] != ' ') command[i - 1] = msg[i];
-  if( strcmp(command, "photo") == 0) return 1;
-  else if (strcmp(command, "quit") == 0) return 2;
+  strcpy(command, msg);
+
+  if( strcmp(command, "!photo") == 0) return 1;
+  else if (strcmp(command, "!quit") == 0) return 2;
   else return 0;
 }
 
@@ -95,9 +95,10 @@ void menu(int outterSocket){
 }
 
 
-int main(int argc, char **args){
+int main(int argc, char *args[]){
 
   int outterSocket = atoi(args[2]);
+  printf("Ponteiro coletado: %i\n", outterSocket);
 
   menu(outterSocket);
 }

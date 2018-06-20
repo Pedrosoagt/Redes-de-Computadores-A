@@ -105,7 +105,7 @@ void *response(void *args){
   int newSocket;
   char sendbuf[BUFF_SIZE];
   char num[BUFF_SIZE];
-  struct client_data msg;
+  Contact newClient;
   struct sockaddr_in nullClient;
 
   nullClient.sin_family = 0;
@@ -119,16 +119,16 @@ void *response(void *args){
   printf("Conexão feita IP: %s | Porta: %i\n", inet_ntoa(aux_params->client.sin_addr), ntohs(aux_params->server.sin_port));
 
   /* Recebe uma mensagem do cliente atraves do novo socket conectado */
-  if (recv(newSocket, &msg, BUFF_SIZE, 0) == -1) {
+  if (recv(newSocket, &newClient, BUFF_SIZE, 0) == -1) {
       perror("Recv()");
       exit(6);
   }
 
   // Se o usuário já está cadastrado, reconhece
-  if( findContact(contactList, msg.num) )
+  if( findContact(contactList, newClient.num) )
     strcpy(sendbuf, "Welcome back!");
   else  // Se não, cadastra
-    if( signup(aux_params, msg.num) ) strcpy(sendbuf, "Success");
+    if( signup(aux_params, newClient.num) ) strcpy(sendbuf, "Success");
     else strcpy(sendbuf, "Failed");
 
   // Envia uma mensagem ao cliente atraves do socket conectado
