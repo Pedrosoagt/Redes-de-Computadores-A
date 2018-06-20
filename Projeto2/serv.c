@@ -1,14 +1,3 @@
-//Server
-
-//adicionar na lista online
-//verificar numero online
-//retornar ip do numero requisitado se estiver online
-
-//receber iformações - ip (socket) - num - nome
-
-//possibilidade verificar na lista
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -114,6 +103,7 @@ void *response(void *args){
 
   // Atribuicoes
   aux_params = (Arguments *) args;   /* Resgatando informacoes dos parametros */
+  free(args);
 
   newSocket = aux_params->ns;
   printf("Conexão feita IP: %s | Porta: %i\n", inet_ntoa(aux_params->client.sin_addr), ntohs(aux_params->server.sin_port));

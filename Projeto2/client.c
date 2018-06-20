@@ -1,16 +1,14 @@
 #include <stdio.h>
-#include <stdio_ext.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <stdio.h>
+#include <stdio_ext.h>    // fpurge
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include "contacts.h"
 
@@ -80,13 +78,15 @@ void invokeTerminal(char distro[], char *file, char *args) {
 }
 
 void *threadClient(void *args_connect) {
-
+  puts("Entrou no thread client");
   char distro[DISTRO_NAME_SIZE];        // Strings q irão conter a distro e o comando
   char termArgs[DISTRO_NAME_SIZE];
   char outterSocket[sizeof(int)];
   Arguments *params;      // Argumentos coletados da thread
 
+
   params = (Arguments *) args_connect;
+  free(args_connect);
 
   getDistro(distro);
 
@@ -154,7 +154,7 @@ void outterConnection(int mainSocket){
   socklen_t clientLen;
   Arguments *params;
   struct sockaddr_in outterClient;
-
+  puts("Entrou no outter conection");
 
   clientLen = sizeof(outterClient);
   // Aceitando conexões externas
@@ -163,10 +163,15 @@ void outterConnection(int mainSocket){
     exit(5);
   }
 
+  puts("Esse cliente aceitou uma conexão!");
+
   params = (Arguments *) malloc(sizeof(Arguments));
   params->addr = (pthread_t *) malloc(sizeof(pthread_t));
   params->client = outterClient;
   params->ns = outterSocket;
+
+  puts("Quem está conectando:");
+  printf("IP: %s\nPorta: %i\n", inet_ntoa(outterClient.sin_addr), ntohs(outterClient.sin_port));
 
   pthread_create(params->addr, NULL, &threadClient, (void *)params);
   pthread_detach(*params->addr);
@@ -199,7 +204,6 @@ void connectClient(int newSocket, char *sendbuf) {
   struct sockaddr_in user;
 
 
-  printf("Cheguei até aqui connectClient\n");
   if(  requestLocal(newSocket, sendbuf, &user) != 0 ) {
 
     // Cria um socket TCP
@@ -234,6 +238,8 @@ void *connectionServer(void *args) {
 
 
   params = (Arguments *) args;
+  free(args);
+
   printf("Cheguei até aqui connectServer\n");
   do {
 
